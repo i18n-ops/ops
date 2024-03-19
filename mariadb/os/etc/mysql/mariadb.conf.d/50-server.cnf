@@ -1,6 +1,6 @@
 [mysqld]
 skip-name-resolve
-
+log_bin_trust_function_creators = 1
 user                    = mysql
 pid-file                = /run/mysqld/mariadb.pid
 basedir                 = /usr

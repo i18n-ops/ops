@@ -2,6 +2,10 @@
 
 set -ex
 
+if ! command -v redis-cli &>/dev/null; then
+  apt-get install -y redis-tools
+fi
+
 U1=0000000000000000000000000000000000000001
 U1_IP=184.174.36.122
 

@@ -16,4 +16,4 @@ SQL="CREATE USER 'sync'@'%' IDENTIFIED BY '$MYSQL_PWD';\
 GRANT ALL PRIVILEGES ON *.* TO 'sync'@'%';\
 FLUSH PRIVILEGES;"
 
-sudo -u mysql mysql -e "$SQL"
+sudo -u mysql /usr/local/mysql/bin/mariadb -e "$SQL"

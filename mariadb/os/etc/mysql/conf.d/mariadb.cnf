@@ -6,6 +6,8 @@ transaction-isolation=READ-COMMITTED
 log_slave_updates=1
 character-set-server=binary
 collation-server=binary
+socket=/run/mysqld/mysqld.sock
+
 
 [mariadb]
 plugin_load_add = ha_rocksdb

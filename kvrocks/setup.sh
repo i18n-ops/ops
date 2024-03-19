@@ -5,11 +5,15 @@ cd $DIR
 set -ex
 
 cd /tmp
+
+ver=$(curl -s https://api.github.com/repos/apache/kvrocks/releases/latest | grep -o '"tag_name": "[^"]*' | cut -d '"' -f 4)
+
 if [ -d "kvrocks" ]; then
   cd kvrocks
-  git pull
+  git checkout $ver
+  git pull origin $ver
 else
-  git clone -b unstable --depth=1 https://github.com/apache/kvrocks.git
+  git clone -b $ver --depth=1 https://github.com/apache/kvrocks.git
   cd kvrocks
 fi
 

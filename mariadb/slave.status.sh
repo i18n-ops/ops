@@ -4,4 +4,8 @@ DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 set -ex
 
-sudo -u mysql mysql -e 'show slave status \G'
+# Slave_IO_Running: 用于复制数据的I/O线程是否正在运行
+# Slave_SQL_Running: 用于重放日志的SQL线程是否正在运行
+# 如果两个值都是Yes,说明复制正常运行。
+
+sudo -u mysql /usr/local/mysql/bin/mariadb -e 'show slave status \G' | rg Running

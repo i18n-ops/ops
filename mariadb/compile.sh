@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-VERSION=11.4.1
+DIR=$(realpath $0) && DIR=${DIR%/*}
+source $DIR/VER.sh
 
 set -ex
 
@@ -8,7 +9,7 @@ apt-get install -y bison libjemalloc-dev libzstd-dev libcurl4-gnutls-dev
 
 cd /tmp
 
-GITDIR=mariadb-$VERSION
+GITDIR=mariadb-$VER
 
 if [ ! -d "$GITDIR" ]; then
   git clone -b $GITDIR --depth=1 https://github.com/MariaDB/server.git $GITDIR
@@ -56,5 +57,3 @@ cmake . \
   -DCMAKE_EXE_LINKER_FLAGS='-ljemalloc' -DWITH_SAFEMALLOC=OFF
 
 make -j $(nproc) package
-
-gh release upload --repo

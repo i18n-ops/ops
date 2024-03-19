@@ -20,5 +20,4 @@ MASTER_USER='sync',\
 MASTER_PASSWORD='$MYSQL_PWD';\
 START SLAVE;"
 
-echo $SQL
-sudo -u mysql mysql -e "$SQL"
+sudo -u mysql /usr/local/mysql/bin/mariadb -e "$SQL"

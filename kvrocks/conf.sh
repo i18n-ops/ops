@@ -22,6 +22,7 @@ rconf '/^bind /c\bind 0.0.0.0'
 rconf '/^db-name /c\db-name i18n.db'
 rconf '/^supervised /c\supervised systemd'
 rconf '/^daemonize /c\daemonize yes'
+rconf '/^migrate-type /c\migrate-type raw-key-value'
 rconf '/^cluster-enabled /c\cluster-enabled yes'
 rconf "/^workers /c\\workers $(nproc)"
 rconf "/^port /c\\port $R_PORT"
