@@ -1,0 +1,44 @@
+[log]
+level = "warn"
+output = "/var/log/realm/realm.log"
+
+[[endpoints]]
+listen = "0.0.0.0:2003"
+remote = "38.242.220.222:2002"
+
+# [dns]
+# mode = "ipv4_only"
+# protocol = "tcp_and_udp"
+# nameservers = ["8.8.8.8:53", "8.8.4.4:53"]
+# min_ttl = 600
+# max_ttl = 3600
+# cache_size = 256
+#
+# [network]
+# no_tcp = false
+# use_udp = true
+# ipv6_only = false
+# tcp_timeout = 5
+# udp_timeout = 30
+# send_proxy = true
+# send_proxy_version = 2
+# accept_proxy = true
+# accept_proxy_timeout = 5
+# tcp_keepalive = 15
+# tcp_keepalive_probe = 3
+#
+# [[endpoints]]
+# listen = "0.0.0.0:5000"
+# remote = "1.1.1.1:443"
+# extra_remotes = ["1.1.1.2:443", "1.1.1.3:443"]
+# balance = "roundrobin: 4, 2, 1"
+# through = "0.0.0.0"
+# interface = "lo"
+#
+# [[endpoints]]
+# listen = "0.0.0.0:10000"
+# remote = "www.google.com:443"
+# extra_remotes = ["www.youtube.com:443"]
+# balance = "roundrobin: 2, 1"
+# through = "0.0.0.0"
+# interface = "wlan0"
