@@ -32,9 +32,9 @@ CONF = {
     http3: ON
     origin_max_http_version: '2'
     security_level:'essentially_off'
-    # strict 有时候会导致 HTTP/2 526
-    # ssl: 'full'
-    ssl: 'strict'
+    # strict 会导致 backblaze HTTP/2 526 , 估计是因为没有类似nginx的proxy_ssl_name导致的
+    # ssl: 'strict'
+    ssl: 'full'
     tls_1_3: ON
   argo:
     tiered_caching: ON
