@@ -4,4 +4,4 @@ DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 set -ex
 
-direnv exec . ./main.coffee
+mise exec -- direnv exec . ./main.coffee
