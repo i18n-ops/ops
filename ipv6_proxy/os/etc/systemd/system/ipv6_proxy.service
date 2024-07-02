@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-Restart=on-failure
+Restart=always
 RestartSec=1
 ExecStart=/opt/bin/ipv6_proxy.sh
 Environment="PATH=/usr/local/bin:/usr/bin"
