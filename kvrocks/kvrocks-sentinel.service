@@ -1,0 +1,33 @@
+[Unit]
+Description=kvrocks-sentinel 
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+CapabilityBoundingSet=~CAP_SYS_PTRACE
+ExecStart=/usr/bin/redis-sentinel /etc/kvrocks-sentinel/sentinel.conf
+ExecStop=/bin/kill -s TERM $MAINPID
+LimitNPROC=1024
+LimitNOFILE=100032
+NoNewPrivileges=yes
+PrivateDevices=true
+PrivateTmp=yes
+ProtectHome=true
+ProtectSystem=strict
+TimeoutStartSec=60s
+TimeoutStopSec=60s
+UMask=0077
+User=kvrocks-sentinel
+Group=kvrocks-sentinel
+
+ReadOnlyDirectories=/
+ReadWriteDirectories=/var/run
+ReadWriteDirectories=/tmp
+ReadWriteDirectories=/etc/kvrocks-sentinel
+ReadWriteDirectories=/var/log/kvrocks-sentinel
+
+#OOMScoreAdjust=-900
+
+[Install]
+WantedBy=multi-user.target

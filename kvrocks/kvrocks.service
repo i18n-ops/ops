@@ -1,0 +1,33 @@
+[Unit]
+Description=kvrocks 
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=notify
+CapabilityBoundingSet=~CAP_SYS_PTRACE
+ExecStart=/usr/local/bin/kvrocks -c /etc/kvrocks/kvrocks.conf 
+ExecStop=/bin/kill -s TERM $MAINPID
+LimitNPROC=1024
+LimitNOFILE=100032
+NoNewPrivileges=yes
+PrivateDevices=true
+PrivateTmp=yes
+ProtectHome=true
+ProtectSystem=strict
+TimeoutStartSec=60s
+TimeoutStopSec=60s
+UMask=0077
+User=kvrocks
+Group=kvrocks
+
+ReadOnlyDirectories=/
+ReadWriteDirectories=/var/run
+ReadWriteDirectories=/mnt/data/i18n/kvrocks
+ReadWriteDirectories=/var/log/kvrocks
+ReadWriteDirectories=/etc/kvrocks
+
+#OOMScoreAdjust=-900
+
+[Install]
+WantedBy=multi-user.target

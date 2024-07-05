@@ -1,0 +1,13 @@
+[mysqld]
+default-tmp-storage-engine=Aria
+skip-innodb
+binlog_format=MIXED
+transaction-isolation=READ-COMMITTED
+log_slave_updates=1
+character-set-server=binary
+collation-server=binary
+socket=/run/mysqld/mysqld.sock
+port=3306
+
+[mariadb]
+plugin_load_add = ha_rocksdb
