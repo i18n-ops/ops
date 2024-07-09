@@ -14,8 +14,9 @@ vps_li="c0 c1 c2"
 
 for vps in $vps_li; do
   to=/tmp/ob/$vps
+  rm -rf $to
   mkdir -p $to
-  $rsync --delete "$vps:/opt/ob/oceanbase/log/observer.log*" $to &
+  $rsync --delete "$vps:/opt/ob/oceanbase/log/observer.log" $to &
 done
 
 wait
