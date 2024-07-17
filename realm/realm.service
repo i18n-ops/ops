@@ -1,0 +1,22 @@
+[Unit]
+Description=realm
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+ 
+[Service]
+Type=simple
+User=realm
+Restart=on-failure
+RestartSec=5s
+DynamicUser=true
+WorkingDirectory=/etc/realm
+ExecStart=/usr/local/bin/realm.sh
+PrivateTmp=yes
+ReadOnlyDirectories=/
+ReadWriteDirectories=/var/log/realm
+ReadWriteDirectories=/etc/realm
+
+ 
+[Install]
+WantedBy=multi-user.target
+
