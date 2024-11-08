@@ -1,0 +1,21 @@
+umask 022
+
+if [[ ":$LD_LIBRARY_PATH:" != *":/usr/local/lib:"* ]]; then
+  export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+fi
+
+export BUN_INSTALL=/opt/bun
+export PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin:$BUN_INSTALL/bin
+export GOPATH=/usr
+export PAGER=bat
+export PNPM_HOME="/opt/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+
+set -o allexport
+. /etc/run_dir.sh /etc/profile.d
+set +o allexport
+
+export MISE_DATA_DIR=/opt/mise
+export MISE_CACHE_DIR=/cache/mise
+
+eval $(mise env)

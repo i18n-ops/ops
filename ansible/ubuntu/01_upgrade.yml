@@ -49,3 +49,5 @@
         msg: "Rebooting after upgrade"
         pre_reboot_delay: 10
       when: upgrade_output is changed
+
+
