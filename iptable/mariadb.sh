@@ -2,10 +2,10 @@
 
 DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
-set -e
+set -ex
 . ../conf/iptable/db.sh
 
-SELF_IP=$(ip addr show | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | while read -r ip; do [[ " $MYSQL_HOST_LI " == *" $ip "* ]] && echo $ip; done)
+SELF_IP=$(ip addr show | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | while read -r ip; do [[ " $MYSQL_HOST_LI " == *" $ip "* ]] && echo $ip && break; done)
 
 isMaster() {
   local result

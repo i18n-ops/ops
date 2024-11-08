@@ -1,0 +1,46 @@
+- name: "设置主机名和主机指纹/Set hostname and host fingerprints"
+  hosts: all
+  become: true
+  gather_facts: yes
+
+  tasks:
+    - name: "设置主机名/Set hostname"
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: "更新 /etc/hosts / Update /etc/hosts"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        block: |
+          {% for host in ansible_play_hosts %}
+          {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
+          {% endfor %}
+        marker: "# ansible managed block"
+
+    - name: 代码库指纹 / Code repository fingerprints
+      ansible.builtin.shell: |
+        ssh-keygen -R {{ item }}
+        ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+      with_items:
+        - gitlab.com
+        - github.com
+        - bitbucket.org
+        - atomgit.com
+        - gitee.com
+
+    - name: "主机之间互相设置指纹 / Host pairs to set fingerprints"
+      ansible.builtin.shell: |
+        ssh-keygen -R {{ hostvars[item].ansible_default_ipv4.address }}
+        ssh-keygen -R {{ item }}
+        ssh-keyscan -H {{ hostvars[item].ansible_default_ipv4.address }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+      loop: "{{ ansible_play_hosts }}"
+      ignore_errors: yes
+
+    - name: 删除 /etc/hosts 和 ~/.ssh/known_hosts 中的重复行 / Remove duplicate lines in /etc/hosts and ~/.ssh/known_hosts
+      shell: |
+        awk '!seen[$0]++' {{ item }} > /tmp/temp_file && mv /tmp/temp_file {{ item }}
+      with_items:
+        - /etc/hosts
+        - ~/.ssh/known_hosts
+

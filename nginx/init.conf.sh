@@ -10,7 +10,10 @@ ln -s $DIR/conf /etc/nginx
 
 cd conf
 
+curl -s -o /dev/null -I --connect-timeout 2 -m 4 -s https://x.com && ZONE=global || ZONE=cn
+
 sed -e "s/VPS/$(hostname)/g" nginx.tmpl.conf >nginx.conf
+sed -i "s/ZONE/$ZONE/g" nginx.conf
 sed -i "s/worker_processes [0-9]\+;/worker_processes $(nproc);/" nginx.conf
 
 mkdir -p /cache/nginx/proxy_temp

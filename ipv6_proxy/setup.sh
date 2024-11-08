@@ -11,7 +11,16 @@ mkdir -p /opt
 
 export RUSTFLAGS="$RUSTFLAGS -C target-cpu=native"
 
-cargo install --root /opt --force ipv6_proxy
+cd ~/i18n
+if [ -d "ipv6_proxy" ]; then
+  cd ipv6_proxy
+  git fetch --all && git reset --hard origin/dev
+else
+  git clone -b dev --depth=1 git@atomgit.com:i18n-in/ipv6_proxy.git
+  cd ipv6_proxy
+fi
+
+cargo install --root /opt --force --path .
 
 rsync -avz $DIR/os/ /
 

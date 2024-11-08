@@ -1,0 +1,51 @@
+- name: 升级 UBUNTU / UPGRADE UBUNTU
+  hosts: all
+  become: yes
+  become_user: root
+  tasks:
+
+    - name: 更新所有软件包 / Update all packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: 安装更新管理器核心 / Install update-manager-core
+      apt:
+        name: update-manager-core
+        state: present
+
+    - name: 确保升级命令可用 / Ensure upgrade command is available
+      command: do-release-upgrade --version
+      ignore_errors: yes
+
+    - name: 设置覆盖配置文件的选项 / Set Dpkg options to force config overwrite
+      copy:
+        dest: /etc/apt/apt.conf.d/99force-confnew
+        content: 'Dpkg::Options { "--force-confnew"; }'
+
+    - name: 修改 release-upgrades 文件 / Modify release-upgrades file
+      lineinfile:
+        path: /etc/update-manager/release-upgrades
+        regexp: '^Prompt='
+        line: 'Prompt=lts'
+        create: yes
+
+    - name: 检查是否有可用的升级 / Check for available upgrades
+      command: do-release-upgrade --check-dist-upgrade-only
+      register: upgrade_check
+      ignore_errors: yes
+      failed_when: false
+
+    - name: 升级 / Upgrade
+      command: do-release-upgrade -f DistUpgradeViewNonInteractive
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      register: upgrade_output
+      ignore_errors: yes
+      when: upgrade_check.rc == 0
+
+    - name: 重启系统（如果需要） / Reboot if required
+      reboot:
+        msg: "Rebooting after upgrade"
+        pre_reboot_delay: 10
+      when: upgrade_output is changed

@@ -1,0 +1,14 @@
+- name: 配置语言环境 / Configure Language Environment
+  hosts: all
+  become: yes
+  tasks:
+    - name: 安装语言包 / Install language packages
+      apt:
+        name: "language-pack-zh-hans"
+        state: present
+
+    - name: 生成 zh_CN.UTF-8 语言环境 / Generate zh_CN.UTF-8 locale
+      command: locale-gen zh_CN.UTF-8
+
+    - name: 使用 update-locale 设置系统语言环境 / Set system locale using update-locale
+      command: update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
