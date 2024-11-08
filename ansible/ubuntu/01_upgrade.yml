@@ -1,6 +1,7 @@
 - name: 升级 UBUNTU / UPGRADE UBUNTU
   hosts: all
   become: yes
+  gather_facts: no
   become_user: root
   tasks:
 
@@ -49,3 +50,5 @@
         msg: "Rebooting after upgrade"
         pre_reboot_delay: 10
       when: upgrade_output is changed
+
+

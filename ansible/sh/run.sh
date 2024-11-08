@@ -6,16 +6,15 @@ cout() {
 
 DIR=$(realpath $0) && DIR=${DIR%/*/*}
 cd $DIR
-set -ex
 
-. ./sh/setup.sh
+./sh/setup.sh
 
 VPS=../conf/ansible/vps
 
-FILES=$(ls $DIR/$OS/*.yml | sort -V)
-
 LOGDIR=/tmp/ansible/$OS
 mkdir -p $LOGDIR
+
+set -ex
 
 run() {
   NAME=$(basename $1)
@@ -23,10 +22,11 @@ run() {
   ANSIBLE_LOG_PATH=$LOGDIR/$NAME.log \
     ansible-playbook \
     -i $VPS \
-    -v $1
+    $1
 }
 
 if [ $# -eq 0 ]; then
+  FILES=$(ls $DIR/$OS/*.yml | sort -V)
   for FILE in $FILES; do
     run $FILE
   done

@@ -1,0 +1,20 @@
+- name: 同步目录 / Sync Directory
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: 同步目录到远程 / Sync mnt to remote
+      synchronize:
+        src: "{{ playbook_dir }}/mnt/"
+        dest: /
+        mode: push
+        recursive: yes
+        perms: yes
+        owner: no
+        group: no
+        rsync_opts:
+          - "--omit-dir-times"
+          - "--compress"
+        set_remote_user: yes
+        use_ssh_args: yes

@@ -1,0 +1,9 @@
+stylusSupremacy.tabStopChar : "  "
+stylusSupremacy.insertColons: false
+stylusSupremacy.insertSemicolons: false
+stylusSupremacy.insertNewLineAroundBlocks: true
+stylusSupremacy.insertNewLineAroundOthers: true
+stylusSupremacy.insertBraces: false
+stylusSupremacy.insertNewLineAroundProperties: true
+stylusSupremacy.insertNewLineAroundImports: true
+

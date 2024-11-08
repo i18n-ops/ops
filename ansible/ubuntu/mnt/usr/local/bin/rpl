@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+fd --type file --hidden --exclude .git -x sd "$1" "$2" "{}"

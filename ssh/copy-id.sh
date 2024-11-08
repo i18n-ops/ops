@@ -40,7 +40,8 @@ else
   USER_HOME=/home/$LOGIN
 fi
 
-for ip in $IP; do
+cpid() {
+  ip=$1
   ssh-keygen -R $ip
   ssh-keyscan -H $ip >>~/.ssh/known_hosts
   cout "正在将 SSH 公钥复制到 $ip\nCopying SSH public key to $ip"
@@ -50,17 +51,28 @@ for ip in $IP; do
   else
     cerr "将 SSH 公钥复制到 $ip 失败\nFailed to copy SSH public key to $ip"
   fi
+}
+
+for ip in $IP; do
+  cpid $ip &
 done
+wait
 
 if [ -z "$SSH_KEY" ]; then
   SSH_KEY=$HOME/.ssh/id_ed25519
 fi
 
+cpkey() {
+  ip=$1
+  uip=$LOGIN@$ip
+  cout "正在将 $SSH_KEY 复制到 $uip\nCopying $SSH_KEY key to $uip"
+  scp $SSH_KEY.pub $SSH_KEY $uip:$USER_HOME/.ssh/
+  ssh $uip "chmod 700 $USER_HOME/.ssh; chmod 600 $USER_HOME/.ssh/*; chmod 644 $USER_HOME/.ssh/*.pub"
+}
+
 if [ -f "$SSH_KEY" ]; then
   for ip in $IP; do
-    uip=$LOGIN@$ip
-    cout "正在将 $SSH_KEY 复制到 $uip\nCopying $SSH_KEY key to $uip"
-    scp $SSH_KEY.pub $SSH_KEY $uip:$USER_HOME/.ssh/
-    ssh $uip "chmod 700 $USER_HOME/.ssh; chmod 600 $USER_HOME/.ssh/*; chmod 644 $USER_HOME/.ssh/*.pub"
+    cpkey $ip &
   done
+  wait
 fi

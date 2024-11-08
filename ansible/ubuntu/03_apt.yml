@@ -1,0 +1,80 @@
+- name: apt-get 安装软件 / Install apt-get packages
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 更新包缓存 / Update package cache
+      apt:
+        update_cache: yes
+
+    - name: 卸载无用的软件 / Uninstall unused software
+      apt:
+        name: "{{ item }}"
+        state: absent
+        purge: yes
+        autoremove: yes
+      loop:
+        - vim
+        - snapd
+        - gnome-software-plugin-snap
+
+    - name: 安装软件包 / Install packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - universal-ctags
+        - bat
+        - gist
+        - eza
+        - fd-find
+        - git
+        - git-lfs
+        - glances
+        - htop
+        - jq
+        - mosh
+        - neovim
+        - openssh-client
+        - rsync
+        - sd
+        - shfmt
+        - software-properties-common
+        - tmux
+        - wget
+        - xtail
+        - zsh
+        - curl
+
+    - name: 代码库指纹 / Code repository fingerprints
+      ansible.builtin.shell: |
+        ssh-keygen -R {{ item }}
+        ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+      with_items:
+        - github.com
+        - atomgit.com
+        - gitee.com
+      register: result
+      until: result.rc == 0
+      retries: 6
+
+    - name: 将默认 shell 设置为 zsh / Set default shell to zsh
+      shell: chsh -s $(which zsh) $(whoami)
+
+    - name: 安装 vim-plug / Install vim-plug
+      shell: curl --max-time 9 --retry 99 -fLo /etc/vim/plug.vim --create-dirs https://fastly.jsdelivr.net/gh/junegunn/vim-plug/plug.vim
+
+    - name: 将 nvim 设置为 vim 和 vi / Set nvim as vim and vi
+      alternatives:
+        name: "{{ item }}"
+        path: /usr/bin/nvim
+      loop:
+        - vim
+        - vi
+
+    - name: 清理APT缓存 / Clean APT Cache
+      apt:
+        autoclean: yes
+        clean: yes

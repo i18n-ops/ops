@@ -3,6 +3,7 @@
   "dependencies": {
     "@3-/coffee_plus": "^0.1.2",
     "@3-/loader": "^0.0.2",
+    "@3-/req": "^0.0.2",
     "@3-/zx": "^0.1.7"
   },
   "devDependencies": {}
