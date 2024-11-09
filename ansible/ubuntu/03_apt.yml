@@ -9,17 +9,6 @@
       apt:
         update_cache: yes
 
-    - name: 卸载无用的软件 / Uninstall unused software
-      apt:
-        name: "{{ item }}"
-        state: absent
-        purge: yes
-        autoremove: yes
-      loop:
-        - vim
-        - snapd
-        - gnome-software-plugin-snap
-
     - name: 安装软件包 / Install packages
       apt:
         name: "{{ item }}"
@@ -27,6 +16,8 @@
       loop:
         - universal-ctags
         - bat
+        - fzf
+        - dstat
         - gist
         - eza
         - fd-find
@@ -47,6 +38,7 @@
         - xtail
         - zsh
         - curl
+        - sudo
 
     - name: 代码库指纹 / Code repository fingerprints
       ansible.builtin.shell: |
@@ -61,10 +53,7 @@
       retries: 6
 
     - name: 将默认 shell 设置为 zsh / Set default shell to zsh
-      shell: chsh -s $(which zsh) $(whoami)
-
-    - name: 安装 vim-plug / Install vim-plug
-      shell: curl --max-time 9 --retry 99 -fLo /etc/vim/plug.vim --create-dirs https://fastly.jsdelivr.net/gh/junegunn/vim-plug/plug.vim
+      shell: chsh -s $(which zsh) root
 
     - name: 将 nvim 设置为 vim 和 vi / Set nvim as vim and vi
       alternatives:

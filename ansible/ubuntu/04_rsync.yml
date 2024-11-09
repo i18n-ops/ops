@@ -4,9 +4,9 @@
   become: yes
   become_user: root
   tasks:
-    - name: 同步目录到远程 / Sync mnt to remote
+    - name: 同步目录到远程 / Sync disk to remote
       synchronize:
-        src: "{{ playbook_dir }}/mnt/"
+        src: "{{ playbook_dir }}/disk/"
         dest: /
         mode: push
         recursive: yes

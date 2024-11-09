@@ -9,7 +9,14 @@ set -ex
 [ -z "$GFW" ] && exit 0
 
 REPO=Watfaq/clash-rs
+NAME=$(basename $REPO)
+
+cd /tmp
+rm -rf $NAME
+
 REPO_URL="https://github.com/$REPO"
 LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r '.tag_name')
 
-cargo_install_github $REPO.git --tag "$LATEST_VERSION"
+git clone git@github.com:$REPO.git --depth 1 -b $LATEST_VERSION
+
+cargo_install --path /tmp/$NAME/clash

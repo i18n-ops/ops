@@ -30,9 +30,3 @@ if ! command -v ansible &>/dev/null; then
     exit 1
   fi
 fi
-
-if [ ! -f "$HOME/.ansible.cfg" ]; then
-  DIR=$(realpath $0) && DIR=${DIR%/*}
-  cd $DIR
-  cp ansible.cfg $HOME/
-fi

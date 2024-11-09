@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd /etc/clash
+exec /usr/local/bin/clash-rs -c conf.yml

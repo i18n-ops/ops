@@ -19,8 +19,7 @@ if ! command -v cargo &>/dev/null; then
   $CURL https://$RS | sh -s -- -y --no-modify-path --default-toolchain nightly
   source $CARGO_HOME/env
   rustup component add rust-analyzer
-
-  rustup default nightly
-else
-  rustup update
 fi
+
+rustup default nightly
+rustup update

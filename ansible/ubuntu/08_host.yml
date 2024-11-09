@@ -27,7 +27,7 @@
       loop: "{{ ansible_play_hosts }}"
       ignore_errors: yes
 
-    - name: 删除 /etc/hosts 和 ~/.ssh/known_hosts 中的重复行 / Remove duplicate lines in /etc/hosts and ~/.ssh/known_hosts
+    - name: 删除重复行 / Remove duplicate lines
       shell: |
         awk '!seen[$0]++' {{ item }} > /tmp/temp_file && mv /tmp/temp_file {{ item }}
       with_items:

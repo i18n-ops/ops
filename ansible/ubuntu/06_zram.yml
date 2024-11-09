@@ -1,0 +1,79 @@
+- name: 配置 ZRAM / Configure ZRAM
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 设置透明大页策略 / Set Transparent Huge Pages policy
+      ansible.builtin.command:
+        cmd: echo madvise > /sys/kernel/mm/transparent_hugepage/enabled
+
+    - name: 安装必需的软件包 / Install required packages
+      ansible.builtin.apt:
+        name:
+          - zram-config
+          - sd
+          - "linux-modules-extra-{{ ansible_kernel }}"
+        state: latest
+        update_cache: yes
+
+    - name: 替换 init-zram-swapping 文件 / Replace init-zram-swapping file
+      ansible.builtin.copy:
+        dest: /usr/bin/init-zram-swapping
+        content: |
+          #!/bin/bash
+          set -ex
+          swapoff /dev/zram0 2>/dev/null || true
+          rmmod zram 2>/dev/null || true
+          modprobe zram
+
+          totalmem=$(LC_ALL=C free | grep -e "^Mem:" | awk '{print $2}')
+          mem=$((totalmem * 1024 ))
+
+          echo zstd > /sys/block/zram0/comp_algorithm
+          echo $mem > /sys/block/zram0/disksize
+          mkswap /dev/zram0
+          swapon -p 5 /dev/zram0
+        mode: '0755'
+
+    - name: 配置系统参数 / Configure sysctl parameters
+      vars:
+        sysctl_params:
+          page-cluster: 0
+          extfrag_threshold: 0
+          swappiness: 200
+          vfs_cache_pressure: 200
+          dirty_ratio: 2
+          dirty_background_ratio: 1
+      block:
+        - name: 删除旧的 sysctl 配置 / Remove old sysctl configuration
+          ansible.builtin.lineinfile:
+            path: /etc/sysctl.conf
+            regexp: '^vm.{{ item.key }}='
+            state: absent
+          loop: "{{ sysctl_params | dict2items }}"
+          loop_control:
+            label: "{{ item.key }}"
+
+        - name: 添加新的 sysctl 配置 / Add new sysctl configuration
+          ansible.builtin.lineinfile:
+            path: /etc/sysctl.conf
+            line: "vm.{{ item.key }}={{ item.value }}"
+            state: present
+          loop: "{{ sysctl_params | dict2items }}"
+          loop_control:
+            label: "{{ item.key }}"
+
+        - name: 应用 sysctl 配置 / Apply sysctl settings
+          ansible.builtin.command:
+            cmd: sysctl -p
+
+    - name: 删除 sysctl 空白行 / Remove empty lines in sysctl.conf
+      ansible.builtin.shell: "sed -i '/^[[:space:]]*$/d' /etc/sysctl.conf"
+
+    - name: 启用并启动 zram-config 服务 / Enable and start zram-config service
+      ansible.builtin.systemd:
+        name: zram-config
+        enabled: yes
+        state: restarted
+

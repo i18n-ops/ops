@@ -1,9 +1,28 @@
 - name: 升级 UBUNTU / UPGRADE UBUNTU
   hosts: all
-  become: yes
   gather_facts: no
+  become: yes
   become_user: root
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
   tasks:
+    - name: 确保 /tmp 目录权限正确 / Ensure /tmp directory permissions are correct
+      file:
+        path: /tmp
+        mode: '1777'
+        state: directory
+
+    - name: 卸载无用的软件 / Uninstall unused software
+      apt:
+        name: "{{ item }}"
+        state: absent
+        purge: yes
+        autoremove: yes
+      loop:
+        - vim
+        - snapd
+        - gnome-software-plugin-snap
 
     - name: 更新所有软件包 / Update all packages
       apt:

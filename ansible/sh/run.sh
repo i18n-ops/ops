@@ -9,12 +9,10 @@ cd $DIR
 
 ./sh/setup.sh
 
-VPS=../conf/ansible/vps
+VPS=../conf/ansible/vps.ini
 
 LOGDIR=/tmp/ansible/$OS
 mkdir -p $LOGDIR
-
-set -ex
 
 run() {
   NAME=$(basename $1)
@@ -22,8 +20,13 @@ run() {
   ANSIBLE_LOG_PATH=$LOGDIR/$NAME.log \
     ansible-playbook \
     -i $VPS \
-    $1
+    $@
+  # -vvvv \
 }
+
+set -ex
+
+export ANSIBLE_CALLBACK_PLUGINS=$DIR/callback_plugins
 
 if [ $# -eq 0 ]; then
   FILES=$(ls $DIR/$OS/*.yml | sort -V)

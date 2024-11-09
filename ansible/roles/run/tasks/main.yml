@@ -1,0 +1,49 @@
+- set_fact:
+    run_before: "{{ lookup('pipe', 'date \"+%Y-%m-%d %H:%M:%S\"') }}"
+
+- name: '[{{ run_title }}] - create the directory "{{ run_output_path }}" to run'
+  become: "{{ run_become }}"
+  file:
+    path: "{{ run_output_path }}"
+    state: directory
+    mode: 0744
+
+- name: '[{{ run_title }}] - clear output file before run'
+  become: "{{ run_become }}"
+  copy: 
+    content: ""
+    dest: "{{ run_output_path }}/{{ run_output_file }}"
+    mode: 0600
+
+- name: '[{{ run_title }}] - start the execution of "{{ run_cmd }}"'
+  become: "{{ run_become }}"
+  shell: |
+    set -o pipefail
+    {{ run_cmd }} 2>&1 | tee --append {{ run_output_path }}/{{ run_output_file }}
+  args:
+    executable: /bin/bash
+    chdir: "{{ run_path }}"
+  async: "{{ run_timeout | int }}"
+  poll: 0
+  register: 'run_register'
+
+- name: '[{{ run_title }}] - Watch "{{ run_output_path }}/output.log" until finishes'
+  include_role:
+    name: 'watch'
+  vars:
+    watch_title: "{{ run_title }}"
+    watch_become: "{{ run_become }}"
+    watch_file: '{{ run_output_path }}/{{ run_output_file }}'
+    watch_job: 'run_register'
+    watch_timeout: "{{ run_timeout | int }}"
+    watch_poll: "{{ run_poll | int }}"
+
+- name: '[{{ run_title }}]'
+  debug: 
+    msg: "before: {{ run_before }}"
+  tags: ["print_action"]
+
+- name: '[{{ run_title }}]'
+  debug: 
+    msg: "after: {{ lookup('pipe', 'date \"+%Y-%m-%d %H:%M:%S\"') }}"
+  tags: ["print_action"]
