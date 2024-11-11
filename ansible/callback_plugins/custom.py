@@ -98,9 +98,13 @@ class CallbackModule(CallbackBase):
                     stderr=self.display_failed_stderr,
                 )
             else:
+                stdout = result._result.get("stdout", "")
+                stderr = result._result.get("stderr", "")
+                cmd = (result._result.get("cmd"),)
+                msg = (result._result.get("msg"),)
                 self._display.display(
-                    "fatal: [%s]: FAILED! => %s"
-                    % (result._host.get_name(), self._dump_results(result._result)),
+                    "❌ %s : %s\n%s\n%s\n%s"
+                    % (result._host.get_name(), cmd, stdout, stderr, msg),
                     color=C.COLOR_ERROR,
                     stderr=self.display_failed_stderr,
                 )
@@ -346,22 +350,25 @@ class CallbackModule(CallbackBase):
         self._clean_results(result._result, result._task.action)
         self._handle_exception(result._result)
 
-        msg = "failed: "
+        msg = "❌ "
         if delegated_vars:
             msg += "[%s -> %s]" % (
                 result._host.get_name(),
                 delegated_vars["ansible_host"],
             )
         else:
-            msg += "[%s]" % (result._host.get_name())
+            msg += "%s" % (result._host.get_name())
 
         self._handle_warnings(result._result)
         self._display.display(
             msg
-            + " (item=%s) => %s"
+            + " item=%s : %s\n%s\n%s\n%s"
             % (
                 self._get_item_label(result._result),
-                self._dump_results(result._result),
+                result._result.get("cmd"),
+                result._result.get("stdout"),
+                result._result.get("stderr"),
+                result._result.get("msg"),
             ),
             color=C.COLOR_ERROR,
         )

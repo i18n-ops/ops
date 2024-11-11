@@ -1,0 +1,14 @@
+- name: nginx 配置 / Nginx config
+  gather_facts: no
+  hosts: nginx
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步 Nginx 配置 / Synchronize Nginx config
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../conf/nginx"
+        dest: /etc/ops/
+        recursive: yes
+        delete: yes
+

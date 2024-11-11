@@ -2,8 +2,14 @@
 
 set -ex
 
-DISK=/dev/sda3
-BOOT=/dev/sda2
+DISK=$(fdisk -l /dev/sda | grep -E '^/dev/' | awk '$6 == "Linux" {print $1, $4}' | sort -k2,2n | tail -n1 | awk '{print $1}')
+
+[ "$(lsblk -no FSTYPE $DISK)" = "ext4" ] || {
+  echo "Error: $DISK is not an ext4 filesystem."
+  exit 1
+}
+
+e2fsck -f $DISK -y || true
 
 MNT="/mnt"
 
@@ -12,6 +18,10 @@ OPTIONS_BTRFS="defaults,ssd,discard,noatime,compress=zstd:3,autodefrag,space_cac
 btrfs-convert $DISK
 
 mount $DISK $MNT -t btrfs -o $OPTIONS_BTRFS
+
+# 会生成新的 /boot/grub/grub.cfg.new
+BOOT=$(fdisk -l | awk '/^\/dev\// && /Linux extended boot/ {print $1}')
+mkdir -p $MNT/boot
 mount $BOOT $MNT/boot -t ext4 -o defaults,noatime
 
 for item in proc dev sys; do

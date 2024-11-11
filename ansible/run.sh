@@ -4,7 +4,7 @@ cout() {
   echo -e "\033[32m$1\033[0m"
 }
 
-DIR=$(realpath $0) && DIR=${DIR%/*/*}
+DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 
 ./sh/setup.sh
@@ -29,10 +29,12 @@ set -ex
 export ANSIBLE_CALLBACK_PLUGINS=$DIR/callback_plugins
 
 if [ $# -eq 0 ]; then
-  FILES=$(ls $DIR/$OS/*.yml | sort -V)
-  for FILE in $FILES; do
-    run $FILE
-  done
+  if [ -n "$OS" ]; then
+    FILES=$(ls $DIR/$OS/*.yml | sort -V)
+    for FILE in $FILES; do
+      run $FILE
+    done
+  fi
 else
   run $1
 fi

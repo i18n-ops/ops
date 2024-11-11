@@ -4,7 +4,7 @@ set -ex
 
 branch=main
 
-export GIT_SSH_COMMAND="ssh -i /root/.ssh/id_ed25519.i18n"
+export GIT_SSH_COMMAND="ssh -i /root/.ssh/id_ed25519"
 
 cd /opt/ssl
 

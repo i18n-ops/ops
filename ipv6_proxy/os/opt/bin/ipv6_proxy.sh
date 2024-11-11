@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
 USER=root
+
 set -o allexport
+
 RUST_LOG=debug,supervisor=warn,hyper=warn,rustls=warn,h2=warn,tower=warn,reqwest=warn,h3=warn,quinn_udp=warn,quinn_proto=warn,watchexec=warn,globset=warn,hickory_proto=warn,hickory_resolver=warn
+
 RUST_BACKTRACE=short
-. $USER/i18n/conf/env/ipv6_proxy.sh
+
+. /etc/ops/ipv6_proxy/conf.sh
+
 set +o allexport
 
 set -ex

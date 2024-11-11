@@ -4,4 +4,4 @@ DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 set -ex
 
-nohup ./_deploy.sh &
+docker build . -t 3tisite/nginx

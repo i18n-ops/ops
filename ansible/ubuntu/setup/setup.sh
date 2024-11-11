@@ -8,6 +8,10 @@ set -ex
 
 ./rust.sh
 
+if [ ! -f "/usr/local/bin/rg" ]; then
+  ./rg.sh
+fi
+
 if [ -f "/opt/atuin/env" ]; then
   . /opt/atuin/env
 fi

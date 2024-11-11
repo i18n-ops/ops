@@ -20,3 +20,5 @@ ensure() {
 }
 
 ensure nodejs golang python
+
+mise exec -- pip install -U parso jedi python-language-server

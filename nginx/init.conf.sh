@@ -5,7 +5,12 @@ cd $DIR
 set -ex
 
 [ "$UID" -eq 0 ] || exec sudo "$0" "$@"
-rm -rf /etc/nginx
+
+if [ ! -L /etc/nginx ]; then
+  rm -rf /tmp/nginx.bak
+  mv /etc/nginx /tmp/nginx.bak
+fi
+
 ln -s $DIR/conf /etc/nginx
 
 cd conf

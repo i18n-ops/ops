@@ -1,8 +1,8 @@
-run_title: "long run task"
+name: "long run task"
 run_become: no
 run_output_path: '/tmp/ansible'
 run_output_file: 'run.log'
-run_path: '/bin'
-run_cmd: 'echo "no run cmd"'
-run_timeout: 3600
-run_poll: 5
+chdir: '/bin'
+cmd: 'echo "no run cmd"'
+timeout: 3600
+poll: 5

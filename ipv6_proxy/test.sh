@@ -3,7 +3,7 @@
 DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 
-source ~/i18n/conf/env/ipv6_proxy.sh
+source /etc/ops/ipv6_proxy/conf.sh
 
 set -e
 

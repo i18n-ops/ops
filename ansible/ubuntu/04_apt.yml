@@ -15,8 +15,11 @@
         state: latest
       loop:
         - universal-ctags
+        - ncdu
+        - duf
         - bat
         - fzf
+        - git-delta
         - dstat
         - gist
         - eza
@@ -39,6 +42,12 @@
         - zsh
         - curl
         - sudo
+
+    - name: fdfind → fd
+      alternatives:
+        name: fd
+        path: /usr/bin/fdfind
+        link: /usr/bin/fd
 
     - name: 代码库指纹 / Code repository fingerprints
       ansible.builtin.shell: |

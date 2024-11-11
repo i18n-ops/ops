@@ -41,7 +41,8 @@ else
 fi
 
 cpid() {
-  ip=$1
+  # 通过主机名获取 IP
+  ip=$(ssh -G $1 | grep 'hostname ' | head -n 1 | awk '{print $2}')
   ssh-keygen -R $ip
   ssh-keyscan -H $ip >>~/.ssh/known_hosts
   cout "正在将 SSH 公钥复制到 $ip\nCopying SSH public key to $ip"

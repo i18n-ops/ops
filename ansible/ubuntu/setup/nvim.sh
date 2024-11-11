@@ -7,18 +7,20 @@ set -ex
 . env.sh
 
 urls=(
-  "${GITHUB_PROXY}https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
   "https://fastly.jsdelivr.net/gh/junegunn/vim-plug/plug.vim"
+  "${GITHUB_PROXY}https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
   "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
   "https://cdn.jsdelivr.net/gh/junegunn/vim-plug/plug.vim"
 )
 
 plug_vim="/etc/vim/plug.vim"
-mkdir -p /etc/vim
 
-for url in "${urls[@]}"; do
-  curl --max-time 16 --retry 99 -fLo "$plug_vim" "$url" && break
-done
+if [ ! -e "$plug_vim" ] || [ ! -s "$plug_vim" ]; then
+  mkdir -p /etc/vim
+  for url in "${urls[@]}"; do
+    wget "$url" -O $plug_vim && break || true
+  done
+fi
 
 if [ ! -f "$plug_vim" ]; then
   echo "FAILED TO DOWNLOAD vim-plug"

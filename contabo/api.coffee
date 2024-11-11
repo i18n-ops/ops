@@ -48,57 +48,41 @@ Authorization = 'Bearer '+access_token
       throw r
 )
 
-for i from (await GET('secrets')).data
-  console.log 'DELETE secrets', i.name
-  await DELETE 'secrets/'+i.secretId
+export GET=GET
+export POST=POST
+export PUT=PUT
+export DELETE=DELETE
 
-{
-  data
-} = await POST('secrets', {
-  name: "initPassword"
-  value: ROOT_PASSWORD
-  type: "password"
-})
+export passwordId = =>
+  for i from (await GET('secrets')).data
+    console.log 'DELETE secrets', i.name
+    await DELETE 'secrets/'+i.secretId
 
-[{secretId}] = data
+  {
+    data
+  } = await POST('secrets', {
+    name: "initPassword"
+    value: ROOT_PASSWORD
+    type: "password"
+  })
 
-console.log data, 'secretId', secretId, typeof secretId
+  [{secretId}] = data
+  secretId
 
-{
-  data
-} = await GET('compute/images', {name:'Ubuntu',orderBy:'lastModifiedDate:desc'})
+export vpsIdByIpPrefix = (ip_prefix)=>
+  li = []
 
-for i from data
-  {name} = i
-  # console.log i.name
-  if name == 'ubuntu-24.04'
-    imageId = i.imageId
-    console.log 'imageId', imageId, name
-    break
+  instances = await GET('compute/instances')
 
-instances = await GET('compute/instances')
+  for i in instances.data
+    ipv4 = i.ipConfig.v4.ip
+    if ipv4.startsWith(ip_prefix)
+      {instanceId} = i
+      console.log [
+        ipv4
+        i.dataCenter
+        i.productName
+      ].join('\t')
+      li.push [ipv4, instanceId]
+  return li
 
-to_reinstall = []
-
-IP_PREFIX = '85.239.24'
-
-for i in instances.data
-  ipv4 = i.ipConfig.v4.ip
-  if ipv4.startsWith(IP_PREFIX)
-    {instanceId} = i
-    console.log 'reinstall', ipv4, i.region
-    to_reinstall.push [ipv4, instanceId]
-
-# 危险, 注释掉会真的重装
-process.exit 0
-
-await Promise.all to_reinstall.map ([ipv4,instanceId])=>
-  console.log ipv4, await PUT(
-    'compute/instances/'+instanceId
-    {
-      imageId
-      defaultUser: 'root'
-      rootPassword: secretId
-    }
-  )
-  return

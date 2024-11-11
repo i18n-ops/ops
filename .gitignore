@@ -9,3 +9,4 @@ pnpm-lock.yaml
 dist/
 lib/
 node_modules/
+__pycache__/

@@ -1,0 +1,37 @@
+- name: ipv6_proxy 配置 / ipv6_proxy config
+  gather_facts: yes
+  hosts: ipv6_proxy
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 获取所有主机名 / Get all hostnames
+      set_fact:
+        all_hostnames: "{{ ansible_play_hosts | map('extract', hostvars, 'inventory_hostname') | list }}"
+
+
+    - name: 同步 ipv6_proxy 配置 / Synchronize ipv6_proxy config
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../conf/ipv6_proxy"
+        dest: /etc/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+
+    - name: 运行本地脚本并传入主机名 / Run local script with hostnames
+      local_action:
+        module: shell
+        cmd: "./ipv6_proxy.host.sh {{ all_hostnames | join(' ') }}"
+      delegate_to: localhost
+      run_once: true
+      become: no
+
+    - name: 分发 host.sh 文件到所有主机 / Distribute host.sh file to all hosts
+      copy:
+        src:  "{{ playbook_dir }}/../../conf/ipv6_proxy/host.sh"
+        dest: /etc/ops/ipv6_proxy/host.sh
+        mode: '0755'
+        owner: "root"
+        group: "root"
+

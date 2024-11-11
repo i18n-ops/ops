@@ -1,0 +1,24 @@
+- import_playbook: ../conf/ipv6_proxy.yml
+- name: 安装 ipv6_proxy / Install ipv6_proxy
+  gather_facts: no
+  hosts: ipv6_proxy
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../ipv6_proxy"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+
+    - include_role:
+        name: run
+      vars:
+        name: 安装ipv6_proxy / Install ipv6_proxy
+        chdir: "/opt/ops/ipv6_proxy"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
+

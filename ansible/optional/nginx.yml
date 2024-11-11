@@ -1,0 +1,40 @@
+- import_playbook: ../conf/nginx.yml
+- name: 安装nginx / Install nginx
+  gather_facts: no
+  hosts: nginx
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 初始化证书 / Initialize certificate
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../ssl"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+
+    - include_role:
+        name: run
+      vars:
+        name: 同步证书 / Sync certificate
+        chdir: "/opt/ops/ssl"
+        cmd: "./init.sh"
+        timeout: 1800
+        poll: 10
+
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../nginx"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+
+    - include_role:
+        name: run
+      vars:
+        name: 安装nginx / Install nginx
+        chdir: "/opt/ops/nginx"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
+

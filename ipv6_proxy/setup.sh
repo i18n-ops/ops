@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
+
 DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
+. /etc/profile
 
 set -ex
 
 ./init.os.sh
-./init.conf.sh
 
 mkdir -p /opt
 
 export RUSTFLAGS="$RUSTFLAGS -C target-cpu=native"
 
-cd ~/i18n
+cd /tmp
+
 if [ -d "ipv6_proxy" ]; then
   cd ipv6_proxy
   git fetch --all && git reset --hard origin/dev
@@ -22,7 +24,7 @@ fi
 
 cargo install --root /opt --force --path .
 
-rsync -avz $DIR/os/ /
+rsync -av --chown=root:root $DIR/os/ /
 
 ipv6_proxy_sh=/opt/bin/ipv6_proxy.sh
 

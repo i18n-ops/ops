@@ -15,10 +15,12 @@ if [ -z "$CURL" ]; then
   cargo_install() {
     cargo install --locked --root /usr/local $@
   }
+  export -f cargo_install
 
   cargo_install_github() {
     cargo_install --git ${GITHUB_PROXY}https://github.com/$@
   }
+  export -f cargo_install_github
 
   . /etc/profile
 fi
