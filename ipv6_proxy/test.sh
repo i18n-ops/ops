@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-DIR=$(realpath $0) && DIR=${DIR%/*}
-cd $DIR
-
-source /etc/ops/ipv6_proxy/conf.sh
+cd /etc/ops/ipv6_proxy
+. conf.sh
 
 set -e
 
