@@ -1,0 +1,28 @@
+- name: 安装 diskus / Install diskus
+  hosts: all
+  become: yes
+  become_user: root
+  gather_facts: no
+
+  tasks:
+    - name: "获取 diskus 最新版本号 / Get Latest Version of diskus"
+      shell: |
+        curl -s https://api.github.com/repos/sharkdp/diskus/releases/latest | jq -r '.tag_name'
+      register: diskus_version
+      changed_when: false
+
+    - name: "下载 diskus deb 文件 / Download diskus deb file"
+      shell: |
+        wget "https://github.com/sharkdp/diskus/releases/download/{{ diskus_version.stdout }}/diskus_{{ diskus_version.stdout | regex_replace('^v', '') }}_amd64.deb" -O /tmp/diskus_latest.deb
+
+    - name: "安装 diskus / Install diskus"
+      apt:
+        deb: /tmp/diskus_latest.deb
+      register: install_result
+
+    - name: "删除临时文件 / Remove Temporary File"
+      file:
+        path: /tmp/diskus_latest.deb
+        state: absent
+      when: install_result is succeeded
+

@@ -1,0 +1,30 @@
+- name: 安装 mosh / Install mosh
+  hosts: all:!docker
+  become: yes
+  become_user: root
+  gather_facts: no
+
+  tasks:
+
+    - name: 卸载 mosh / Uninstall mosh
+      apt:
+        name: mosh
+        state: absent
+        purge: yes
+        autoremove: yes
+    - name: 安装 autoconf / Install autoconf
+      apt:
+        name: autoconf
+        state: present
+        update_cache: yes
+
+    - name: 编译 mosh / Compile mosh
+      shell: |
+        cd /tmp
+        git clone https://github.com/mobile-shell/mosh.git
+        cd mosh
+        git pull https://github.com/MahdiNazemi/mosh.git
+        ./autogen.sh
+        ./configure
+        make
+        make install

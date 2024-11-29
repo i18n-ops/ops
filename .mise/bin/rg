@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+exec $EXE_RG -L --no-ignore-vcs "$@"

@@ -1,0 +1,10 @@
+[Unit]
+Description=NAME
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=EXEC
+
+[Install]
+WantedBy=multi-user.target

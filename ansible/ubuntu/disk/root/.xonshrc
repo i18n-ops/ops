@@ -1,0 +1,29 @@
+from os.path import dirname,abspath,join,basename
+import itertools
+from xonsh.tools import print_color
+import sys
+
+AAA = f"{{#aaa}}"
+
+def colored_tracer(cmd_li, **_):
+  for cmd in cmd_li:
+    if not cmd:
+      continue
+    out = [f"{{#333}}→ {{GREEN}}{cmd[0]}"]
+    cmd = cmd[1:]
+    if cmd:
+      out.append(AAA)
+      for i in cmd:
+        if i == ">":
+          out.append(f" {{GREEN}}>{AAA}")
+        else:
+          out.append(f" {i}")
+    out.append(f"{{RESET}}")
+
+    print_color(''.join(out), file=sys.stderr)
+
+$XONSH_TRACE_SUBPROC_FUNC = colored_tracer
+$XONSH_NO_AMALGAMATE = True
+$RAISE_SUBPROC_ERROR = True
+$XONSH_SHOW_TRACEBACK = True
+$XONSH_TRACE_SUBPROC = True

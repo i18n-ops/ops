@@ -1,0 +1,73 @@
+[include]
+path = ~/.config/git.conf
+
+[core]
+quotepath = false
+editor = vim
+precomposeUnicode = true
+excludesfile=~/.gitignore
+attributesfile = ~/.gitattributes
+
+[alias]
+ci = commit -s
+st = status
+rclone =  !git clone --recursive
+rmain = !git submodule foreach --recursive "git checkout main"
+rpull = !git pull $1 && git submodule foreach --recursive \"git pull origin main --recurse-submodules\"
+rinit = !git submodule update --init --recursive --progress
+rc = rclone
+ri = rinit
+rp = rpull
+
+[pull]
+default = current
+rebase = false
+
+[push]
+default = upstream
+
+[color]
+ui = true
+
+[init]
+defaultBranch = main
+
+[log]
+date = format:%Y-%m-%d %H:%M:%S
+
+[http]
+  postBuffer = 524288000
+
+
+
+[credential]
+	helper = store
+[safe]
+	directory = /opt/ssl
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[submodule]
+  recurse = true
+
+[core]
+pager = delta
+
+[interactive]
+diffFilter = delta --color-only
+
+[delta]
+navigate = true    # use n and N to move between diff sections
+
+# delta detects terminal colors automatically; set one of these to disable auto-detection
+# dark = true
+# light = true
+
+[merge]
+conflictstyle = diff3
+
+[diff]
+colorMoved = default
+
