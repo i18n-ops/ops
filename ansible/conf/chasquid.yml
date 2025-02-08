@@ -1,0 +1,34 @@
+- name: chasquid 配置 / chasquid config
+  gather_facts: yes
+  hosts: chasquid
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 获取所有主机名 / Get all hostnames
+      set_fact:
+        all_hostnames: "{{ ansible_play_hosts | map('extract', hostvars, 'inventory_hostname') | list }}"
+
+    - name: 运行本地脚本并传入主机名 / Run local script with hostnames
+      local_action:
+        module: shell
+        cmd: "./ip_li.sh chasquid {{ all_hostnames | join(' ') }}"
+      delegate_to: localhost
+      run_once: true
+      become: no
+
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+      loop:
+        - src: "{{ playbook_dir }}/../../conf/etc.chasquid/"
+          dest: /etc/chasquid/
+        - src: "{{ playbook_dir }}/../../chasquid"
+          dest: /opt/ops/
+        - src: "{{ playbook_dir }}/../../conf/chasquid"
+          dest: /etc/ops/
