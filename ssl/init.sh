@@ -26,7 +26,4 @@ else
   chown -R www-data:www-data .
 fi
 
-minute=$((RANDOM % 60))
-hour=$((RANDOM % 24))
-day=$((RANDOM % 28 + 1))
-cron_add "$minute $hour $day" $DIR cron.sh
+./service.sh $DIR/cron.sh
