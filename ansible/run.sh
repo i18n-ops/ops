@@ -21,8 +21,8 @@ run() {
   cout "\n$NAME\n"
   ansible-playbook \
     -i $VPS \
+    -vvv \
     $@
-  # -vvvv \
 }
 
 set -ex

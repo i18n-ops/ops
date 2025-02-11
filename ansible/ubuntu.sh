@@ -4,4 +4,4 @@ DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 set -ex
 
-exec ./run.sh ubuntu
+exec ./run.sh ubuntu $@
