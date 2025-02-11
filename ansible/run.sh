@@ -27,10 +27,11 @@ run() {
 set -ex
 
 if [ -d "$1" ]; then
+  shift
   FILES=$(ls $1/*.yml | sort -n)
   for FILE in $FILES; do
-    run $FILE
+    run $FILE $@
   done
 else
-  run $1
+  run $@
 fi
