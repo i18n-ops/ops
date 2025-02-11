@@ -49,6 +49,7 @@ clean = git-lfs clean -- %f
 smudge = git-lfs smudge -- %f
 process = git-lfs filter-process
 required = true
+
 [submodule]
 recurse = true
 
@@ -59,12 +60,8 @@ pager = delta
 diffFilter = delta --color-only
 
 [delta]
+navigate = true    
 paging = never
-navigate = true    # use n and N to move between diff sections
-
-# delta detects terminal colors automatically; set one of these to disable auto-detection
-# dark = true
-# light = true
 
 [merge]
 conflictstyle = diff3
