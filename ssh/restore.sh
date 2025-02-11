@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ -z "$3" ]; then
+if [ -z "$2" ]; then
   echo "Usage: $0 hostname ip passwd"
   exit 1
 else
@@ -9,7 +9,6 @@ else
   export SSHPASS=$3
 fi
 
-direnv allow
 DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 set -ex
