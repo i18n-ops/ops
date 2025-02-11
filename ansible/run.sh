@@ -26,9 +26,11 @@ run() {
 
 set -ex
 
-if [ -d "$1" ]; then
+confdir=$1
+
+if [ -d "$confdir" ]; then
   shift
-  FILES=$(ls $1/*.yml | sort -n)
+  FILES=$(ls $confdir/*.yml | sort -n)
   for FILE in $FILES; do
     run $FILE $@
   done
