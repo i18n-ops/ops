@@ -21,6 +21,8 @@
         - vim
         - snapd
         - gnome-software-plugin-snap
+        # fix https://askubuntu.com/questions/1001653/why-am-i-getting-parse-usage-error-on-function-invocation-in-bash
+        - bash-completion
 
     - name: 更新所有软件包 / Update all packages
       apt:
