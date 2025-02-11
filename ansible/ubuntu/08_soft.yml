@@ -43,7 +43,7 @@
         - protobuf-compiler
         - luajit
 
-    - name: 使用 update-alternatives 设置 LuaJIT 为默认 Lua 解释器 / Use update-alternatives to set LuaJIT as default Lua interpreter
+    - name: 设置 LuaJIT 为默认 Lua 解释器 / set LuaJIT as default Lua interpreter
       command: update-alternatives --install /usr/bin/lua lua /usr/bin/luajit 10
 
     - include_role:
