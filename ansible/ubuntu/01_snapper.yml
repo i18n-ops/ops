@@ -1,0 +1,29 @@
+- name: 磁盘快照 / Disk snapshots
+  gather_facts: false
+  hosts: btrfs
+  become_user: root
+  become: true
+  tasks:
+    - name: 安装 snapper 和 python / Install snapper and python
+      apt:
+        name:
+          - snapper
+          - python3
+          - python-is-python3
+        update_cache: yes
+        state: latest
+
+    - name: 同步本地 snapper 目录到远程 / Sync local snapper directory to remote
+      synchronize:
+        src: snapper
+        dest: /opt/ops/
+        delete: yes
+
+    - include_role:
+        name: run
+      vars:
+        name: 初始化 snapper / Initialize snapper
+        chdir: "/opt/ops/snapper"
+        cmd: "./init.sh"
+        timeout: 600
+        poll: 3

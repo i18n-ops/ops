@@ -1,0 +1,61 @@
+{
+  "languageserver": {
+    "vls": {
+      "command": "/usr/local/bin/vls",
+      "filetypes": [
+        "vlang"
+      ]
+    },
+    "zls": {
+      "command": "/usr/local/bin/zls",
+      "filetypes": [
+        "zig"
+      ]
+    }
+  },
+  "biome.requireConfiguration": false,
+  "diagnostic.hintSign": "→",
+  "diagnostic.infoSign": "💡",
+  "diagnostic.warningSign": "!",
+  "diagnostic.errorSign": "×",
+  "suggest.floatEnable": true,
+  "coc.preferences.formatOnSave": true,
+  "ruff.enableExperimentalFormatter": true,
+  "ruff.autoFixOnSave": true,
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": false,
+  "python.linting.pylintEnabled": false,
+  "python.formatting.provider": "none",
+  "stylusSupremacy.alwaysUseImport": true,
+  "stylusSupremacy.alwaysUseZeroWithoutUnit": true,
+  "stylusSupremacy.insertBraces": false,
+  "stylusSupremacy.insertColons": false,
+  "stylusSupremacy.insertNewLineAroundBlocks": true,
+  "stylusSupremacy.insertNewLineAroundImports": true,
+  "stylusSupremacy.insertNewLineAroundOthers": true,
+  "stylusSupremacy.insertNewLineAroundProperties": true,
+  "stylusSupremacy.insertSemicolons": false,
+  "stylusSupremacy.preserveNewLinesBetweenPropertyValues": true,
+  "stylusSupremacy.reduceMarginAndPaddingValues": true,
+  "stylusSupremacy.sortProperties": "alphabetical",
+  "vetur.format.defaultFormatter.css": "stylus-supremacy",
+  "vetur.validation.style": false,
+  "vetur.ignoreProjectWarning": true,
+  "rust-analyzer.updates.channel": "nightly",
+  "rust-analyzer.cargo.loadOutDirsFromCheck": true,
+  "rust-analyzer.procMacro.enable": true,
+  "rust-analyzer.diagnostics.disabled": [
+    "unresolved-proc-macro"
+  ],
+  "rust-analyzer.checkOnSave": false,
+  "rust-analyzer.updates.checkOnStartup": false,
+  "workspace.ignoredFolders": [
+    "$HOME/.cargo/**",
+    "$HOME/.rustup/**"
+  ],
+  "svelte.enable-ts-plugin": false,
+  "svelte.language-server.ls-path": "/Users/z/.bun/bin/svelteserver",
+  "svelte.ask-to-enable-ts-plugin": false,
+  "svelte.plugin.typescript.enable": false,
+  "svelte.plugin.svelte.format.config.svelteIndentScriptAndStyle": false
+}
