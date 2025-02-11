@@ -18,18 +18,20 @@ if [ ! -d "$dist" ]; then
   git -C ../.. clone --depth=1 git@github.com:i18n-dist/dist.git
 fi
 
-if ! command -v sshpass &>/dev/null; then
-  case $(uname -s) in
-  Linux*)
-    apt install -y sshpass
-    ;;
-  Darwin*)
-    brew install esolitos/ipa/sshpass
-    ;;
-  *)
-    echo "need install sshpass"
-    ;;
-  esac
+if [ -n "$SSHPASS" ]; then
+  if ! command -v sshpass &>/dev/null; then
+    case $(uname -s) in
+    Linux*)
+      apt install -y sshpass
+      ;;
+    Darwin*)
+      brew install esolitos/ipa/sshpass
+      ;;
+    *)
+      echo "need install sshpass"
+      ;;
+    esac
+  fi
 fi
 
 root_ip=root@$ip
@@ -41,12 +43,17 @@ keyscan() {
 
 keyscan $ip
 
-rsync="sshpass -e rsync --mkpath --progress -avz -e ssh"
-
 id_ed25519=$dist/ssh/id_ed25519
 chmod 600 $id_ed25519
 
-ssh="sshpass -e ssh $root_ip"
+ssh="ssh $root_ip"
+rsync="rsync --mkpath --progress -avz -e ssh"
+
+if [ -n "$SSHPASS" ]; then
+  rsync="sshpass -e $rsync"
+  ssh="sshpass -e $ssh"
+fi
+
 $rsync --perms --chown=root $id_ed25519 $root_ip:/root/.ssh/
 
 vpssrc=os/vps/$hostname/
