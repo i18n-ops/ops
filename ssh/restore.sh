@@ -56,4 +56,4 @@ if [ ! -d "$vpssrc" ]; then
   $rsync --perms --chown=root ./$vpssrc $root_ip:/
 fi
 
-$ssh "set -ex && apt-get update && apt-get install -y unzip direnv git && hostnamectl set-hostname $hostname && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts && export GIT_SSH_COMMAND='ssh -i ~/.ssh/id_ed25519' && cd /tmp && rm -rf os && git clone --depth=1 git@github.com:i18n-ops/os.git && mkdir -p /os && rsync --remove-source-files -av os/ /os/ && cd /os && ./init.sh && passwd -d root"
+$ssh "set -ex && apt-get update && apt-get install -y unzip git && hostnamectl set-hostname $hostname && ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts && export GIT_SSH_COMMAND='ssh -i ~/.ssh/id_ed25519' && cd /tmp && rm -rf os && git clone --depth=1 git@github.com:i18n-ops/os.git && mkdir -p /os && rsync --remove-source-files -av os/ /os/ && cd /os && ./init.sh && passwd -d root"
