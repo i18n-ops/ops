@@ -13,11 +13,10 @@
       ]
     }
   },
-  "biome.bin": "/opt/bun/bin/biome",
   "biome.requireConfiguration": false,
   "diagnostic.hintSign": "→",
   "diagnostic.infoSign": "💡",
-  "diagnostic.warningSign": "⚠️",
+  "diagnostic.warningSign": "!",
   "diagnostic.errorSign": "×",
   "suggest.floatEnable": true,
   "coc.preferences.formatOnSave": true,
@@ -43,15 +42,21 @@
   "vetur.validation.style": false,
   "vetur.ignoreProjectWarning": true,
   "rust-analyzer.updates.channel": "nightly",
+  "rust-analyzer.cargo.features": "all",
   "rust-analyzer.cargo.loadOutDirsFromCheck": true,
   "rust-analyzer.procMacro.enable": true,
   "rust-analyzer.diagnostics.disabled": [
     "unresolved-proc-macro"
   ],
+  "rust-analyzer.checkOnSave": false,
   "rust-analyzer.updates.checkOnStartup": false,
   "workspace.ignoredFolders": [
     "$HOME/.cargo/**",
     "$HOME/.rustup/**"
   ],
-  "svelte.enable-ts-plugin": false
+  "svelte.enable-ts-plugin": false,
+  "svelte.language-server.ls-path": "/Users/z/.bun/bin/svelteserver",
+  "svelte.ask-to-enable-ts-plugin": false,
+  "svelte.plugin.typescript.enable": false,
+  "svelte.plugin.svelte.format.config.svelteIndentScriptAndStyle": false
 }
