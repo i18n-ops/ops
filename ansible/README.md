@@ -1,3 +1,5 @@
+服务器如果想运行ansible部署到其他服务器,先运行: `./sh/setup.sh` 安装 `ansible`
+
 可以指定运行的服务器
 ```
 ./run.sh optional/nginx.yml -l g0
