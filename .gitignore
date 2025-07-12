@@ -1,6 +1,6 @@
 *.log
 *.out
-bun.lockb
+bun.lock
 
 /conf/
 /ubuntu/
