@@ -1,0 +1,39 @@
+- name: ssh config
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: 设置StrictHostKeyChecking / Set StrictHostKeyChecking
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: '^StrictHostKeyChecking'
+        line: "StrictHostKeyChecking accept-new"
+        create: yes
+        insertafter: EOF
+
+    - name: 设置HashKnownHosts / Set HashKnownHosts
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: '^HashKnownHosts'
+        line: "HashKnownHosts no"
+        create: yes
+        insertafter: EOF
+
+    - name: 禁止root用密码登录 / Disable root login with password
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: "PermitRootLogin prohibit-password"
+        create: yes
+        insertafter: EOF
+
+- name: "重启SSH服务 / Restart SSH service"
+  hosts: all:!docker
+  become: yes  # 使用特权权限（sudo）
+  become_user: root
+  tasks:
+    - name: Restart SSH service
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

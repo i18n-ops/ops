@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+
+import traceback
+from os.path import join
+import os
+from os import getcwd, walk, rmdir, chmod
+import re
+import stat
+
+DEL_LIST = (
+    r"npm-debug\.log",
+    r'.*\.pyc$',
+    r'.*\.log$',
+    r'.*\.bak$',
+    r'.*\.swp$',
+    r'.*\.lock$',
+    r'^__pycache__$',
+    r'.*\.orig$',
+    r'.*\.po~$',
+    r'^core\.\d+$',
+    r'^nohup\.out$',
+    r'^:w$',
+    r'^\.DS_Store$',
+  )
+
+
+def write_able(name):
+    path = join(root, name)
+    chmod(path, os.stat(path).st_mode | stat.S_IWRITE)
+    return path
+
+
+def remove(name):
+    os.remove(write_able(name))
+
+
+def del_dir(dir):
+    for root, dirs, files in walk(dir, topdown=False):
+
+        for name in files:
+            try:
+                remove(join(root, name))
+            except:
+                traceback.print_exc()
+        for name in dirs:
+            try:
+                rmdir(write_able(join(root, name)))
+            except:
+                traceback.print_exc()
+    rmdir(dir)
+
+DEL_LIST = [re.compile(i) for i in DEL_LIST]
+
+for root, dirs, files in walk(getcwd(), topdown=False):
+    for i in DEL_LIST:
+        j = ''
+
+        def if_match(func):
+            if i.match(j):
+                func(join(root, j))
+                print(join(root, j))
+
+        for j in dirs:
+            if_match(del_dir)
+
+        for j in files:
+            if_match(remove)

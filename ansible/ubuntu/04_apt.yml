@@ -1,0 +1,80 @@
+- name: apt-get 安装软件 / Install apt-get packages
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 更新包缓存 / Update package cache
+      apt:
+        update_cache: yes
+
+    - name: 安装软件包 / Install packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - iputils-ping
+        - gh
+        - redis-tools
+        - universal-ctags
+        - ncdu
+        - duf
+        - bat
+        - fzf
+        - git-delta
+        - dstat
+        - gist
+        - eza
+        - fd-find
+        - git
+        - git-lfs
+        - glances
+        - htop
+        - jq
+        - neovim
+        - openssh-client
+        - rsync
+        - sd
+        - shfmt
+        - software-properties-common
+        - tmux
+        - wget
+        - xtail
+        - zsh
+        - curl
+        - sudo
+
+    - name: fdfind → fd
+      alternatives:
+        name: fd
+        path: /usr/bin/fdfind
+        link: /usr/bin/fd
+
+    - name: 代码库指纹 / Code repository fingerprints
+      ansible.builtin.shell: |
+        ssh-keygen -R {{ item }}
+        ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+      with_items:
+        - github.com
+        - atomgit.com
+        - gitee.com
+      register: result
+      until: result.rc == 0
+      retries: 6
+
+    - name: 将默认 shell 设置为 zsh / Set default shell to zsh
+      shell: chsh -s $(which zsh) root
+
+    - name: 将 nvim 设置为 vim 和 vi / Set nvim as vim and vi
+      alternatives:
+        name: "{{ item }}"
+        path: /usr/bin/nvim
+      loop:
+        - vim
+        - vi
+
+    - name: 清理APT缓存 / Clean APT Cache
+      apt:
+        autoclean: yes
+        clean: yes

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+msg=$(git log -1 --pretty=format:'%B' main)
+echo -e $msg
+branch=$(git symbolic-ref --short -q HEAD)
+
+root=$(git rev-parse --show-toplevel)
+
+cd $root
+
+set -ex
+
+git add -u || true
+git commit -m. || true
+git pull origin $branch
+git push --set-upstream origin $branch
+
+if [ "$branch" != "main" ]; then
+git add . && git commit -m "$msg"  || true
+git checkout main
+git pull 
+git checkout $branch
+git merge main 
+hash=$(git log --format=%H -2 main|tail -1)
+git reset --soft $hash
+git add . && git commit -m "$msg"  
+git push -f origin $branch
+git checkout main || git checkout -b main origin/main
+git reset --hard HEAD~1 || true
+git merge $branch
+git push --recurse-submodules=on-demand --set-upstream origin main -f
+git checkout $branch
+fi

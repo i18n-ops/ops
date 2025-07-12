@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+if [ ! -d "$1/node_modules" ]; then
+bun i --cwd $1
+fi
