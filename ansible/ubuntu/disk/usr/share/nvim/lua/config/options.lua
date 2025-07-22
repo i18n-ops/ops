@@ -21,3 +21,4 @@ opt.linebreak = true -- 按单词换行，避免在单词中间断开
 opt.conceallevel = 0
 opt.spell = true
 opt.spelllang = { "en", "cjk" }
+opt.ignorecase = false
