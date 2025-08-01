@@ -1,0 +1,13 @@
+[Unit]
+Description=ipv6_proxy
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/opt/bin/ipv6_proxy.sh
+Environment="PATH=/usr/local/bin:/usr/bin"
+
+[Install]
+WantedBy=multi-user.target

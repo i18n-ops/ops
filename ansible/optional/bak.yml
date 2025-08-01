@@ -1,0 +1,25 @@
+- name: bak 配置 / bak config
+  gather_facts: yes
+  hosts: bak
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+      loop:
+        - src: "{{ playbook_dir }}/../../conf/disk/root/.config/gh"
+          dest: /root/.config/
+        - src: "{{ playbook_dir }}/../../conf/bak"
+          dest: /etc/ops/
+        - src: "{{ playbook_dir }}/../../bak"
+          dest: /opt/ops/
+
+    - name: 设置定时备份 / Set Crontab
+      ansible.builtin.command: /opt/ops/bak/cron.sh
