@@ -1,0 +1,16 @@
+- name: iptable 配置 / iptable config
+  gather_facts: yes
+  hosts: iptable
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../iptable"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+

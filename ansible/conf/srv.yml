@@ -1,0 +1,42 @@
+- name: srv 配置 / srv config
+  gather_facts: yes
+  hosts: srv
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 获取所有主机名 / Get all hostnames
+      set_fact:
+        all_hostnames: "{{ ansible_play_hosts | map('extract', hostvars, 'inventory_hostname') | list }}"
+
+    - name: 运行本地脚本并传入主机名 / Run local script with hostnames
+      local_action:
+        module: shell
+        cmd: |
+          srv_li="{{ all_hostnames | join(' ') }}"
+          ./ip_li.sh srv $srv_li
+          cd {{ playbook_dir }}/../../conf/dist
+          git pull -f || true
+          echo "export SRV_LI=\"$srv_li\"" > srv_li.sh
+          git add srv_li.sh
+          git commit -m "srv_li" && git push || true
+      delegate_to: localhost
+      run_once: true
+      become: no
+
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+      loop:
+        - src: "{{ playbook_dir }}/../../conf/dist/"
+          dest: /etc/ops/dist/
+        - src: "{{ playbook_dir }}/../../conf/srv"
+          dest: /etc/ops/
+        - src: "{{ playbook_dir }}/../../srv"
+          dest: /opt/ops/
+

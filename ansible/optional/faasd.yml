@@ -1,0 +1,70 @@
+- name: 安装 faasd / Install faasd
+  hosts: faasd
+  become: true
+  become_user: root
+
+  tasks:
+    - name: 安装依赖 / Install dependencies
+      apt:
+        name:
+          - git
+          - curl
+          - build-essential
+          - libseccomp-dev
+        state: present
+        update_cache: yes
+
+    - name: 检查containerd是否已安装 / Check if containerd is installed
+      stat:
+        path: /usr/bin/containerd
+      register: containerd_installed
+
+    - name: 安装containerd / Install containerd
+      apt:
+        name: containerd
+        state: present
+      when: not containerd_installed.stat.exists
+
+    - name: 克隆faasd仓库 / Clone faasd repository
+      git:
+        repo: https://github.com/openfaas/faasd.git
+        dest: /tmp/faasd
+        version: master
+        force: yes
+        depth: 1
+
+    - name: 安装faasd / Install faasd
+      shell: ./hack/install.sh
+      args:
+        chdir: /tmp/faasd
+
+    - name: 创建并启动faasd服务 / Create and start faasd service
+      systemd:
+        name: faasd
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: 清理临时文件 / Clean up temporary files
+      file:
+        path: /tmp/faasd
+        state: absent
+
+    - name: 输出登录信息 / Print login information
+      debug:
+        msg: |
+          配置目录 /var/lib/faasd
+
+          密码
+          cat /var/lib/faasd/secrets/basic-auth-password
+
+          使用以下命令登录faasd:
+          faas-cli login --username admin --gateway=http://127.0.0.1:8080 --password
+
+          网页访问
+          http://127.0.0.1:8080
+          用户名 admin
+
+          使用以下命令查看帮助:
+          faas-cli deploy --help
+

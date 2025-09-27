@@ -1,0 +1,32 @@
+[Unit]
+Description=Redis 
+Documentation=https://redis.io/documentation
+#Before=your_application.service another_example_application.service
+#AssertPathExists=/var/lib/redis
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=notify
+#OOMScoreAdjust=-900
+CapabilityBoundingSet=~CAP_SYS_PTRACE
+ExecStart=/usr/local/bin/redis-server /etc/redis/redis-PROJECT-PORT.conf --supervised systemd --daemonize yes
+LimitNOFILE=10032
+NoNewPrivileges=yes
+PrivateDevices=true
+PrivateTmp=yes
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyDirectories=/
+ReadWriteDirectories=/mnt/data/PROJECT/redis/PORT 
+ReadWriteDirectories=/var/log/redis-PROJECT
+ReadWriteDirectories=/var/run
+ReadWriteDirectories=/run
+TimeoutStartSec=60s
+TimeoutStopSec=60s
+UMask=0077
+User=redis
+Group=redis
+
+[Install]
+WantedBy=multi-user.target

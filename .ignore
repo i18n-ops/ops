@@ -1,0 +1,12 @@
+*.lock
+*.log
+*.out
+
+.DS_Store
+bun.lockb
+pnpm-lock.yaml
+
+.git/
+node_modules/
+target/
+
