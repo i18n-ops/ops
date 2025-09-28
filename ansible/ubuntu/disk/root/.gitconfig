@@ -1,5 +1,7 @@
 [include]
 path = ~/.config/git.conf
+[include]
+path = ~/.config/git/_.conf
 
 [core]
 quotepath = false
