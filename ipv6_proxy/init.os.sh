@@ -29,6 +29,23 @@ fi
 EOF
 
   chmod +x $add_route
+
+  apt-get install -y ndppd
+
+  # netcup 需要这个 ， contablo 不需要这个
+  cat <<EOF >/etc/ndppd.conf
+route-ttl 30000
+proxy eth0 {
+    router no
+    timeout 500
+    ttl 30000
+    rule $ipv6 {
+      static
+    }
+}
+EOF
+  systemctl enable --now ndppd || true
+  systemctl restart ndppd || true
 fi
 
 systemctl enable --now networkd-dispatcher || true
