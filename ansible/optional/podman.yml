@@ -8,5 +8,6 @@
     name: 安装 podman / Install podman
     ansible.builtin.shell: |
       set -ex
+      apt-get update
       apt-get install -y podman podman-compose
       grep -q '^[[:space:]]*unqualified-search-registries' /etc/containers/registries.conf 2>/dev/null || sed -i '1i unqualified-search-registries = ["docker.io"]' /etc/containers/registries.conf
