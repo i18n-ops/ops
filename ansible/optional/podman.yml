@@ -1,0 +1,15 @@
+- name: 安装 podman / Install podman
+  gather_facts: no
+  hosts: podman
+  become: yes
+  become_user: root
+
+  tasks:
+    - include_role:
+        name: run
+      vars:
+        name: 安装 podman / Install podman
+        chdir: "/opt/ops/podman"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
