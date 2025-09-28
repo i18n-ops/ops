@@ -26,10 +26,10 @@ echo "export ${NAME^^}_IP_LI=\"$ip_li\"" >ip_li.sh
 
 chmod +x ip_li.sh
 
-git add ip_li.sh || true
-
-if [[ -n $(git status -s) ]]; then
-  git commit -m "update ipv6_proxy ip_li.sh"
-  git pull || true
-  git push
-fi
+# git add ip_li.sh || true
+#
+# if [[ -n $(git status -s) ]]; then
+#   git commit -m "update ipv6_proxy ip_li.sh"
+#   git pull || true
+#   git push
+# fi
