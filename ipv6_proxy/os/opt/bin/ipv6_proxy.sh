@@ -14,6 +14,6 @@ set +o allexport
 
 set -ex
 
-ipv6=$(ip -6 addr show dev eth0 | grep "inet6.*scope global" | awk '{print $2}' | sed 's/::1\//::\//')
+ipv6=$(ip -6 addr show dev eth0 | grep "inet6.*scope global" | awk '{print $2}' | awk -F'/' '{print $1}' | awk -F':' '{print $1":"$2":"$3":"$4"::/64"}')
 
 exec /opt/bin/ipv6_proxy -b 0.0.0.0:$IPV6_PROXY_PORT -i $ipv6
