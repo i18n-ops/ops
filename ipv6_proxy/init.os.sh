@@ -11,6 +11,7 @@ fi
 sysctl -p
 
 add_route=/usr/lib/networkd-dispatcher/routable.d/50-add-route
+ipv6=$(ip -6 addr show dev eth0 | grep "inet6.*scope global" | awk '{print $2}' | awk -F'/' '{print $1}' | awk -F':' '{print $1":"$2":"$3":"$4"::"}')
 
 if [ ! -f "$add_route" ]; then
 
@@ -18,7 +19,6 @@ if [ ! -f "$add_route" ]; then
     apt install -y networkd-dispatcher
   fi
 
-  ipv6=$(ip -6 addr show dev eth0 | grep "inet6.*scope global" | awk '{print $2}' | awk -F'/' '{print $1}' | awk -F':' '{print $1":"$2":"$3":"$4"::"}')
 
   cat <<EOF >$add_route
 #!/bin/sh
