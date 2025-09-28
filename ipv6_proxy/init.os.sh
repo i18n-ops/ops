@@ -32,7 +32,7 @@ EOF
 fi
 
 systemctl enable --now networkd-dispatcher || true
-systemctl restart networkd-dispatcher
+systemctl restart networkd-dispatcher || true
 
 # netcup 需要这个 ， contabo 不需要这个
 if curl --interface ${ipv6}f  -IsS --max-time 10 https://baidu.com >/dev/null 2>&1; then
