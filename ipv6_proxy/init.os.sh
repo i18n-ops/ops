@@ -42,12 +42,12 @@ else
   cat <<EOF >/etc/ndppd.conf
 route-ttl 30000
 proxy eth0 {
-    router no
-    timeout 500
-    ttl 30000
-    rule $ipv6/64 {
-      static
-    }
+  router no
+  timeout 500
+  ttl 30000
+  rule $ipv6/64 {
+    static
+  }
 }
 EOF
   systemctl enable --now ndppd || true
