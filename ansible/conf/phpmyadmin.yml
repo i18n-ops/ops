@@ -1,0 +1,15 @@
+- name: phpmyadmin 配置 / phpmyadmin config
+  gather_facts: yes
+  hosts: phpmyadmin
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步配置 / Synchronize config
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../conf/phpmyadmin/{{ inventory_hostname }}/"
+        dest: /etc/
+        recursive: yes
+        delete: no
+        rsync_opts:
+          - "--chown=root:root"

@@ -1,0 +1,65 @@
+- name: 安装软件 / Install soft
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+    # - name: 创建 clash 配置目录 / Create clash config directory
+    #   file:
+    #     path: /etc/clash
+    #     state: directory
+    #     owner: root
+    #     group: root
+    #     mode: '0755'
+    #
+    # - name: 同步 clash 配置 / Sync clash config
+    #   copy:
+    #     src: "{{ playbook_dir }}/../../conf/ansible/clash.sh"
+    #     dest: /etc/clash/conf.sh
+    #     owner: root
+    #     group: root
+    #     mode: '0644'
+
+    - name: 同步脚本 / Sync scripts
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/setup"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--omit-dir-times"
+          - "--compress"
+          - "--rsh='/usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"
+
+    - name: 安装编译工具链 / Install build tools
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - musl-tools
+        - mold
+        - clang
+        - protobuf-compiler
+        - luajit
+
+    - name: 设置 LuaJIT 为默认 Lua 解释器 / set LuaJIT as default Lua interpreter
+      command: update-alternatives --install /usr/bin/lua lua /usr/bin/luajit 10
+
+    - include_role:
+        name: run
+      vars:
+        name: 运行 setup.sh 脚本 / Run setup.sh script
+        chdir: "/opt/ops/setup"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
+
+    - name: 删除目录 / Remove Directories
+      file:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - /opt/ops/setup
+        - /tmp/rust/target
+        - /root/snap

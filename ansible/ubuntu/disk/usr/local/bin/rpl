@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+replace_from="$1"
+replace_to="$2"
+shift 2
+fd --type file --hidden --exclude .git -x sd "$replace_from" "$replace_to" $@ "{}"

@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+. /etc/ops/bak/env.sh
+
+if [ -n "$1" ]; then
+  backup=$1
+else
+  echo "USAGE : $0 backup_path"
+  exit 1
+fi
+
+today=$(date +%Y-%m-%d)
+
+tmpdir="/tmp/github_bak"
+orgdir=$(pwd)
+
+set -ex
+
+if [ -f "$tmpdir/.git/config" ]; then
+  cd $tmpdir
+  git fetch origin
+  git reset --hard origin/main
+  git clean -fd
+  cd $orgdir
+else
+  rm -rf $tmpdir
+  git clone --depth=1 git@github.com:$GITHUB_REPO.git $tmpdir
+  cd $tmpdir
+fi
+
+name=$(basename $1)
+
+rm -f $name $name.tar
+
+cd $orgdir
+
+line="| $name | $today | $(find $backup -maxdepth 1 -mindepth 1 -type d -printf '%f ' | sed 's/ $//') |"
+
+tar --create --file=- --directory=$backup --owner=0 --group=0 . > $tmpdir/$name.tar
+
+cd $tmpdir
+
+hash=$(sha512sum $name.tar | awk '{print $1}')
+
+if [ -f "$name.sha512" ] && [ "$(cat $name.sha512)" = "$hash" ]; then
+  IS_SAME=1
+else
+  echo -n $hash >$name.sha512
+  git add $name.sha512
+fi
+
+README=README.md
+
+if [ ! -f "$README" ]; then
+  echo -ne "| project | date | dir |\n|--|--|--|\n" > $README
+fi
+
+if grep -q "^| $name |" "$README"; then
+  sed -i "s/^| $name |.*/$line/" "$README"
+else
+  echo "$line" >> "$README"
+fi
+
+git add $README || true
+git commit -m "~" 
+git push 
+
+if [ -z "$IS_SAME" ]; then
+
+  cat $name.tar | zstd -15 | gpg --symmetric --batch --passphrase-file /etc/ops/bak/gpgPassowrd --cipher-algo AES256 -o $name
+  ghr="gh release"
+
+  $ghr view "$today" &>/dev/null || $ghr create $today --title "$today" --notes "~"
+  $ghr upload $today $name || ($ghr delete-asset $today $name -y && $ghr upload $today $name)
+  rm $name
+fi
+
+rm $name.tar
+
+

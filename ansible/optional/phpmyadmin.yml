@@ -1,0 +1,23 @@
+- import_playbook: ../conf/phpmyadmin.yml
+- name: 部署 phpMyAdmin / Deploy phpMyAdmin
+  hosts: phpmyadmin
+  become: yes
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../phpmyadmin"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+
+    - include_role:
+        name: run
+      vars:
+        name: 安装phpmyadmin / Install phpmyadmin
+        chdir: "/opt/ops/phpmyadmin"
+        cmd: "./setup.sh"
+        timeout: 9000
+        poll: 60
