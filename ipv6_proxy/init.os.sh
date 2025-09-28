@@ -18,7 +18,7 @@ if [ ! -f "$add_route" ]; then
     apt install -y networkd-dispatcher
   fi
 
-  ipv6=$(ip -6 addr show dev eth0 | grep "inet6.*scope global" | awk '{print $2}' | sed 's/::1\//::\//')
+  ipv6=$(ip -6 addr show dev eth0 | grep "inet6.*scope global" | awk '{print $2}' | awk -F'/' '{print $1}' | awk -F':' '{print $1":"$2":"$3":"$4"::/64"}')
 
   cat <<EOF >$add_route
 #!/bin/sh
