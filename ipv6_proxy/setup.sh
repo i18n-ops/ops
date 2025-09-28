@@ -18,7 +18,7 @@ if [ -d "ipv6_proxy" ]; then
   cd ipv6_proxy
   git fetch --all && git reset --hard origin/dev
 else
-  git clone -b dev --depth=1 ssh://git@ssh.github.com:443/i18n-api/ipv6_proxy.git
+  GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519.i18n" git clone -b dev --depth=1 ssh://git@ssh.github.com:443/i18n-api/ipv6_proxy.git
   cd ipv6_proxy
 fi
 

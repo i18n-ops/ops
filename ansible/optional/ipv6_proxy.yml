@@ -6,7 +6,6 @@
   become_user: root
 
   tasks:
-
     - include_role:
         name: run
       vars:
@@ -15,4 +14,3 @@
         cmd: "./setup.sh"
         timeout: 1800
         poll: 10
-
