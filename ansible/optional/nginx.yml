@@ -1,0 +1,24 @@
+- import_playbook: ../conf/nginx.yml
+- name: 安装 nginx / Install nginx
+  gather_facts: no
+  hosts: nginx
+  become: yes
+  become_user: root
+
+  tasks:
+    # - include_role:
+    #     name: run
+    #   vars:
+    #     name: 同步证书 / Sync certificate
+    #     chdir: "/opt/ops/ssl"
+    #     cmd: "./init.sh"
+    #     timeout: 1800
+    #     poll: 10
+    - include_role:
+        name: run
+      vars:
+        name: 安装 nginx / Install nginx
+        chdir: "/opt/ops/nginx"
+        cmd: "./setup/setup.sh"
+        timeout: 6000
+        poll: 30

@@ -1,0 +1,12 @@
+*.log
+*.out
+bun.lock
+
+/conf/
+/ubuntu/
+
+pnpm-lock.yaml
+dist/
+lib/
+node_modules/
+__pycache__/

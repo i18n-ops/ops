@@ -1,0 +1,28 @@
+- name: 安装 mosh / Install mosh
+  hosts: all:!docker
+  become: yes
+  become_user: root
+  gather_facts: no
+
+  tasks:
+    - name: 卸载 mosh / Uninstall mosh
+      apt:
+        name: mosh
+        state: absent
+        purge: yes
+        autoremove: yes
+
+    - name: 编译 mosh / Compile mosh
+      shell: |
+        if ! command -v mosh &>/dev/null; then
+          apt-get install -y protobuf-compiler libutempter-dev build-essential libncurses5-dev libncursesw5-dev autoconf automake libtool pkg-config libssl-dev apt-utils git
+          cd /tmp
+          rm -rf mosh
+          git clone https://github.com/mobile-shell/mosh.git
+          cd mosh
+          git pull https://github.com/MahdiNazemi/mosh.git
+          ./autogen.sh
+          ./configure
+          make
+          make install
+        fi

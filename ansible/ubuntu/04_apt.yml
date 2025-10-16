@@ -1,0 +1,90 @@
+- name: apt-get 安装软件 / Install apt-get packages
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 更新包缓存 / Update package cache
+      apt:
+        update_cache: yes
+
+    - name: 添加 arm64 架构 (如果需要) / Add arm64 architecture (if needed)
+      shell: |
+        if [ "$(dpkg --print-architecture)" = "arm64" ]; then
+          dpkg --remove-architecture amd64 || true
+          dpkg --add-architecture arm64
+        fi
+
+    - name: 安装软件包 / Install packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - rsync
+        - curl
+        - sudo
+        - zsh
+        - git
+        - git-lfs
+        - tmux
+        - iputils-ping
+        - gh
+        - redis-tools
+        - universal-ctags
+        - ncdu
+        - duf
+        - bat
+        - fzf
+        - git-delta
+        - dstat
+        - gist
+        - eza
+        - fd-find
+        - glances
+        - htop
+        - jq
+        - plocate
+        - openssh-client
+        - sd
+        - shfmt
+        - software-properties-common
+        - wget
+        - xtail
+
+    - name: fdfind → fd
+      alternatives:
+        name: fd
+        path: /usr/bin/fdfind
+        link: /usr/bin/fd
+
+    - name: diskus
+      ansible.builtin.shell: |
+        cd /tmp
+        REPO=sharkdp/diskus
+        VER=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r '.tag_name'|cut -c 2-)
+        NAME="diskus_${VER}_$(dpkg --print-architecture).deb"
+        wget -c "https://github.com/$REPO/releases/download/v$VER/$NAME"
+        dpkg -i $NAME
+
+    - name: 代码库指纹 / Code repository fingerprints
+      ansible.builtin.shell: |
+        ssh-keygen -R {{ item }}
+        ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+      with_items:
+        - github.com
+        - atomgit.com
+        - gitee.com
+      register: result
+      until: result.rc == 0
+      retries: 6
+
+    - name: 将默认 shell 设置为 zsh / Set default shell to zsh
+      shell: |
+        sed -i '/^[^#]*pam_shells.so$/s/^/#/' /etc/pam.d/chsh
+        chsh -s $(which zsh) root
+
+    - name: 清理APT缓存 / Clean APT Cache
+      apt:
+        autoclean: yes
+        clean: yes

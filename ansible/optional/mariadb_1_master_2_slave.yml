@@ -1,0 +1,17 @@
+- import_playbook: ./mariadb.yml
+- import_playbook: ../conf/mariadb.yml
+- name: 安装 mariadb / Install mariadb
+  gather_facts: no
+  hosts: mariadb_1_master_2_slave
+  become: yes
+  become_user: root
+
+  tasks:
+    - include_role:
+        name: run
+      vars:
+        name: 安装mariadb / Install mariadb
+        chdir: "/opt/ops/mariadb"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10

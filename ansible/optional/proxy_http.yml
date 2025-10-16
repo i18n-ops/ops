@@ -1,0 +1,25 @@
+- import_playbook: ../conf/proxy_http.yml
+- name: 安装 proxy_http / Install proxy_http
+  gather_facts: no
+  hosts: proxy_http
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../proxy_http"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+          - "--mkpath"
+    - include_role:
+        name: run
+      vars:
+        name: 安装proxy_http / Install proxy_http
+        chdir: "/opt/ops/proxy_http"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10

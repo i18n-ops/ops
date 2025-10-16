@@ -1,0 +1,16 @@
+- name: proxy_http 配置 / proxy_http config
+  gather_facts: yes
+  hosts: proxy_http
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步配置 / Sync Config
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../conf/proxy_http"
+        dest: /etc/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+          - "--mkpath"
