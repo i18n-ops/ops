@@ -10,7 +10,7 @@ cronrun=/usr/local/bin/cronrun
 run="${@:2}"
 job="$1 * * $cronrun $run"
 
-(crontab -l 2>/dev/null || echo '# 分 时 月的天 月 周的天') | (
+(crontab -l 2>/dev/null || echo '# 分 时 每月几号 月 周几') | (
   cat | grep -v -F "$run"
   echo "$job"
 ) | crontab -
