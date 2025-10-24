@@ -1,0 +1,22 @@
+- import_playbook: ../conf/iptable.yml
+- name: 安装 iptable / Install iptable
+  gather_facts: no
+  hosts: iptable
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 安装 iptables / Install iptables
+      apt:
+        name: iptables
+        state: present
+
+    - include_role:
+        name: run
+      vars:
+        name: 安装iptable / Install iptable
+        chdir: "/opt/ops/iptable"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
+
