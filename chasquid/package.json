@@ -1,0 +1,6 @@
+{
+  "dependencies": { "nodemailer": "^6.9.3" },
+  "devDependencies": {
+    "@3-/loader": "^0.0.2"
+  }
+}

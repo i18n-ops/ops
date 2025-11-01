@@ -1,0 +1,20 @@
+services:
+  mariadb:
+    build:
+      context: .
+    ports:
+      - "3306:3306"
+    volumes:
+      # 挂载备份目录（只读）
+      - ./mariadb:/backup:ro
+      # 用于持久化MariaDB数据的命名卷
+      - ./var/lib/mysql:/var/lib/mysql
+    environment:
+      # 设置MariaDB的root密码。请更改为安全的密码。
+      - MARIADB_ROOT_PASSWORD=my-secret-pw
+      # 您可以在此处添加其他MariaDB环境变量。
+      # 例如：MARIADB_DATABASE, MARIADB_USER, MARIADB_PASSWORD
+
+volumes:
+  mariadb_data:
+    # 这个命名卷将存储恢复后的数据库。

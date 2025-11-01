@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+exec /usr/bin/batcat -p ${@:1:$#}

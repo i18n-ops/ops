@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -x
+cd $2
+
+mkdir -p /var/log/crontab
+
+cronrun=/usr/local/bin/cronrun
+
+run="${@:2}"
+job="$1 * * $cronrun $run"
+
+(crontab -l 2>/dev/null || echo '# 分 时 每月几号 月 周几') | (
+  cat | grep -v -F "$run"
+  echo "$job"
+) | crontab -
+
+echo -e "\033[32mcrontab added\033[0m"
+
+crontab -l

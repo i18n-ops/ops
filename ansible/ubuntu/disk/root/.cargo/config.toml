@@ -1,0 +1,29 @@
+# [registries.crates-io]
+# protocol = "git"
+
+[net]
+# git-fetch-with-cli = true
+
+[source.crates-io]
+# replace-with = 'rsproxy'
+
+[source.rsproxy]
+registry = "https://rsproxy.cn/crates.io-index"
+# [source.rsproxy-sparse]
+# registry = "sparse+https://rsproxy.cn/index/"
+# [registries.rsproxy]
+# index = "https://rsproxy.cn/crates.io-index"
+# [net]
+#git-fetch-with-cli = true
+# [target.aarch64-apple-darwin]
+# linker = "/opt/homebrew/opt/llvm/bin/clang"
+
+# [target.'cfg(any(target_family = "windows", target_env = "msvc", target_env = "musl")']
+# rustflags = ["-Ctarget-feature=+crt-static"]
+
+[build]
+target-dir = "/tmp/rust/target"
+rustflags = ["-Z", "threads=8"]
+
+[target.'cfg(any(target_family = "windows", target_env = "msvc", target_env = "musl")']
+rustflags = ["-Ctarget-feature=+crt-static"]

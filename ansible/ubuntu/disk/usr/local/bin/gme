@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+set -e
+. ~/.bash_aliases
+branch=$(git symbolic-ref --short -q HEAD)
+
+root=$(git rev-parse --show-toplevel)
+
+cd $root
+
+git add . && git commit -m. || true
+
+cleanup() {
+  rm -f diff.txt message.txt
+}
+
+trap cleanup EXIT
+
+set -x
+
+git pull origin $branch
+
+git show-ref --verify --quiet refs/heads/main || (git branch main && git branch --set-upstream-to=origin/main main && git pull && git checkout $branch)
+
+if [ "$branch" != "main" ]; then
+  git checkout main
+  git pull
+  git checkout $branch
+  git merge main
+  hash=$(git log --pretty=format:'%H %s' | awk '{if (length($2) > 3 && !($2 ~ /^Merge/)) {print $1; exit}}')
+  git reset --soft $hash
+  git add .
+
+  rm -f message.txt
+  git diff origin/main >diff.txt
+  PROMPT="查看 @diff.txt , 按约定式提交规范(<type>[optional scope]: <description> / <中文描述>)写英文/中文双语的git提交信息保存到 @message.txt, 但不要提交"
+  gemini --yolo "$PROMPT" || true
+  if [ ! -f "message.txt" ]; then
+    iflow -p "$PROMPT"
+  fi
+  git commit --file ./message.txt
+  git push -f origin $branch
+  git checkout main
+  git merge $branch
+  git push
+  git checkout $branch
+fi

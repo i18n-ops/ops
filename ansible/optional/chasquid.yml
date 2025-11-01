@@ -1,0 +1,17 @@
+- import_playbook: ../conf/chasquid.yml
+- name: 安装 chasquid / Install chasquid
+  gather_facts: no
+  hosts: chasquid
+  become: yes
+  become_user: root
+
+  tasks:
+    - include_role:
+        name: run
+      vars:
+        name: 安装chasquid / Install chasquid
+        chdir: "/opt/ops/chasquid"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
+

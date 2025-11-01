@@ -1,0 +1,44 @@
+- name: 配置时间同步 / Configure Time Synchronization
+  hosts: all:!docker
+  become: yes
+  gather_facts: no
+  remote_user: root
+
+  tasks:
+    - name: 安装 chrony / Install chrony
+      apt:
+        name: chrony
+        state: present
+        update_cache: yes
+
+    - name: 配置 chrony 服务器及同步间隔 / Configure chrony servers with sync interval
+      blockinfile:
+        path: /etc/chrony/chrony.conf
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          # 使用国内服务器，大约每30分钟同步一次 / Use Chinese servers, approx. sync every 30 minutes
+          server ntp.tencent.com iburst minpoll 6 maxpoll 12
+          server ntp.aliyun.com iburst minpoll 6 maxpoll 12
+          server ntp.ntsc.ac.cn iburst minpoll 6 maxpoll 12
+          server cn.ntp.org.cn iburst minpoll 6 maxpoll 12
+
+    - name: 确保 chrony 不会出现时间倒退 / Ensure no time rollback with chrony
+      lineinfile:
+        path: /etc/chrony/chrony.conf
+        regexp: '^makestep'
+        line: 'makestep 1 3'
+        state: present
+
+    - name: 删除重复行 / Remove duplicate lines
+      shell: |
+        awk '!seen[$0]++' {{ item }} > /tmp/temp_file && mv /tmp/temp_file {{ item }}
+      with_items:
+        - /etc/chrony/chrony.conf
+
+
+    - name: 重启 chrony 服务 / Restart chrony service
+      service:
+        name: chrony
+        state: restarted
+        enabled: yes
+

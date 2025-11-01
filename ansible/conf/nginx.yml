@@ -1,0 +1,39 @@
+- name: nginx 配置 / Nginx config
+  gather_facts: no
+  hosts: nginx
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../nginx"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+    # - name: 初始化证书 / Initialize certificate
+    #   ansible.builtin.synchronize:
+    #     src: "{{ playbook_dir }}/../../ssl"
+    #     dest: /opt/ops/
+    #     recursive: yes
+    #     delete: yes
+    #     rsync_opts:
+    #       - "--chown=root:root"
+    # - name: 同步 Nginx 配置 / Synchronize Nginx config
+    #   ansible.builtin.synchronize:
+    #     src: "{{ playbook_dir }}/../../conf/nginx"
+    #     dest: /etc/ops/
+    #     recursive: yes
+    #     delete: yes
+    #     rsync_opts:
+    #       - "--chown=root:root"
+    - include_role:
+        name: run
+      vars:
+        name: 初始化配置文件 / Initialize config file
+        chdir: "/opt/ops/nginx"
+        cmd: "./init.conf.sh"
+        timeout: 1800
+        poll: 10

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+msg="$@"
+
+if [ -z "$msg" ]; then
+  msg='.'
+fi
+
+branch=$(git symbolic-ref --short -q HEAD)
+
+set -ex
+
+git add --update :/ && git commit -m "$msg" || true
+git push || git pull origin $branch && git push || true
+
+git show-ref --verify --quiet refs/heads/main || (git branch main && git branch --set-upstream-to=origin/main main && git pull && git checkout $branch)
+
+if [ "$branch" == "main" ]; then
+  git checkout -b dev || git checkout dev
+  branch=dev
+fi
+
+git merge main || true
+
+git push --recurse-submodules=on-demand --set-upstream origin $branch

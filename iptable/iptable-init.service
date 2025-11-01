@@ -1,0 +1,13 @@
+[Unit]
+After=network.target mariadb.service
+Description=iptable-init
+
+[Service]
+Type=oneshot
+ExecStart=DIR/init.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+
+

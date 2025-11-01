@@ -1,0 +1,4 @@
+[mysqld]
+plugin-load-add=ha_rocksdb.so
+rocksdb
+default-storage-engine=rocksdb

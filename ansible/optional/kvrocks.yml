@@ -1,0 +1,22 @@
+- import_playbook: ../conf/kvrocks.yml
+- name: 安装 kvrocks / Install kvrocks
+  gather_facts: no
+  hosts: kvrocks
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 安装 autoconf / Install autoconf
+      apt:
+        name: autoconf
+        state: present
+
+    - include_role:
+        name: run
+      vars:
+        name: 安装kvrocks / Install kvrocks
+        chdir: "/opt/ops/kvrocks"
+        cmd: "./setup.sh"
+        timeout: 1800
+        poll: 10
+

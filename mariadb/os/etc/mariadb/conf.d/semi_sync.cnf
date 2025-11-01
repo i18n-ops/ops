@@ -1,0 +1,7 @@
+[mysqld]
+master_retry_count=315360000
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_master_wait_point=AFTER_SYNC
+rpl_semi_sync_slave_enabled=1
+slave_net_timeout=4
+# read_only=on

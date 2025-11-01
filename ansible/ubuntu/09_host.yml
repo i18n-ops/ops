@@ -1,0 +1,62 @@
+- name: "设置主机名和主机指纹/Set hostname and host fingerprints"
+  hosts: all:!docker
+  become: true
+  become_user: root
+  gather_facts: yes
+
+  tasks:
+    - name: "获取外网 IP / Get public IP"
+      uri:
+        url: http://4.ipw.cn
+        return_content: yes
+      register: public_ipv4
+
+    - name: "提取外网 IP / Extract public IP"
+      set_fact:
+        public_ip: "{{ public_ipv4.content }}"
+
+    - name: "设置主机名/Set hostname"
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: 删除旧的vps主机名 / Remove old vps host names
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# ANSIBLE VPS {mark}"
+        state: absent
+
+    - name: "更新 /etc/hosts / Update /etc/hosts"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        block: |
+          {% for host in ansible_play_hosts %}
+          {{ hostvars[host].public_ip }} {{ host }}
+          {% endfor %}
+        marker: "# ANSIBLE VPS {mark}"
+
+    - name: 上传 sh/etc_host.py 脚本 / Upload sh/etc_host.py script
+      ansible.builtin.copy:
+        src: sh/etc_host.py
+        dest: /tmp/etc_host.py
+        mode: '0755'
+
+    - name: 主机名去重 / Host name deduplication
+      ansible.builtin.command:
+        cmd: python3 /tmp/etc_host.py
+
+    - name: "主机之间互相设置指纹 / Host pairs to set fingerprints"
+      ansible.builtin.shell: |
+        set -ex
+        ssh-keygen -R {{ hostvars[item].public_ip }} 2> /dev/null || true
+        ssh-keygen -R {{ item }} 2> /dev/null || true
+        ssh-keyscan -H {{ hostvars[item].public_ip }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+      loop: "{{ ansible_play_hosts }}"
+
+    - name: 删除重复行 / Remove duplicate lines
+      shell: |
+        tac /etc/hosts | awk '!seen[$0]++' | tac
+      with_items:
+        - /etc/hosts
+        - ~/.ssh/known_hosts
+

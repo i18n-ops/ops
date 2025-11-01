@@ -1,0 +1,23 @@
+*.raw
+build/
+*.lock
+
+# Nix 构建产物
+result
+result-*
+
+# 版本配置文件（构建时生成）
+version.yml
+
+# 临时文件
+*.tmp
+*.temp
+
+# 日志文件
+*.log
+
+# QCOW2 镜像文件（除了最终输出目录）
+*.qcow2
+
+# Nix 缓存和垃圾回收
+.nix-*

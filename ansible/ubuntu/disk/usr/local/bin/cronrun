@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+name=$(echo "$1_$2" | cut -c 2- | awk '{print $1}' | sed 's/\//./g'  )
+log=/var/log/crontab/$name
+
+cd $1
+
+exec timeout 24h /usr/local/bin/mise exec -- bash -c ". /etc/profile && export PATH=$1:\$PATH && ${@:2}" > $log.log 2>$log.err.log
+

@@ -1,0 +1,25 @@
+- import_playbook: ../conf/mariadb.yml
+- name: 安装 mariadb / Install mariadb
+  gather_facts: no
+  hosts: mariadb
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../mariadb"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--chown=root:root"
+
+    - include_role:
+        name: run
+      vars:
+        name: 安装mariadb / Install mariadb
+        chdir: "/opt/ops/mariadb"
+        cmd: "./setup.sh"
+        timeout: 9000
+        poll: 60

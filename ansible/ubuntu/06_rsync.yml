@@ -1,0 +1,59 @@
+- name: 同步目录 / Sync Directory
+  gather_facts: no
+  hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: 同步目录到远程 / Sync disk to remote
+      synchronize:
+        src: "{{ playbook_dir }}/disk/"
+        dest: /
+        mode: push
+        recursive: yes
+        perms: yes
+        owner: no
+        group: no
+        rsync_opts:
+          - "--omit-dir-times"
+          - "--compress"
+          - "--rsh='/usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"
+        set_remote_user: yes
+        use_ssh_args: yes
+
+    - name: 同步秘钥 / Sync keys
+      synchronize:
+        src: "{{ playbook_dir }}/../../conf/disk/"
+        dest: /
+        mode: push
+        recursive: yes
+        perms: yes
+        owner: no
+        group: no
+        rsync_opts:
+          - "--ignore-existing"
+          - "--omit-dir-times"
+          - "--compress"
+          - "--rsh='/usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"
+        set_remote_user: yes
+        use_ssh_args: yes
+
+    - name: 同步 authorized_keys / Sync authorized_keys
+      synchronize:
+        src: "{{ playbook_dir }}/../../conf/disk/root/.ssh/authorized_keys"
+        dest: /root/.ssh/authorized_keys
+        mode: push
+        recursive: yes
+        perms: yes
+        owner: no
+        group: no
+        rsync_opts:
+          - "--omit-dir-times"
+          - "--compress"
+          - "--rsh='/usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"
+        set_remote_user: yes
+        use_ssh_args: yes
+
+    - name: ssh config
+      shell: |
+        chown -R root:root /root/.ssh
+        chmod -R 600 /root/.ssh/*

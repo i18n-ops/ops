@@ -1,0 +1,575 @@
+---
+title: 'NixOS 系列（五）：制作小内存 VPS 的 DD 磁盘镜像'
+categories: 计算机与客户端
+tags: [NixOS]
+date: 2023-12-16 02:30:58
+image: /usr/uploads/202110/nixos-social-preview.png
+series: NixOS
+---
+
+黑色星期五已经过了，相信有一些读者新买了一些特价的 VPS、云服务器等，并且想在 VPS
+上安装 NixOS。但是由于 NixOS 的知名度不如 CentOS、Debian、Ubuntu 等老牌 Linux 发
+行版，几乎没有 VPS 服务商提供预装 NixOS 的磁盘镜像，只能由用户使用以下方法之一手
+动安装：
+
+- 自行挂载 NixOS 的安装 ISO 镜像，然后手动格盘安装。
+
+由于你可以在 NixOS 安装镜像的环境中随意操作 VPS 的硬盘，这种方法自由度最高，可以
+任意对硬盘进行分区，指定文件系统格式。但是，使用这种方法前，你的主机商需要在以下
+三项前提中满足任意一项：
+
+1. 主机商直接提供 NixOS 的 ISO 镜像挂载（即使是很老的版本）；
+2. 主机商允许用户上传自定义 ISO 镜像，此时你可以直接上传一份 NixOS 的安装 ISO；
+3. 主机商提供启动 [netboot.xyz](https://netboot.xyz/)（一个可以通过网络安装多种
+   Linux 发行版的工具）的方式，并且你的 VPS 内存超过 1GB，有足够空间让
+   netboot.xyz 将 NixOS 的安装镜像解压到内存中。
+
+我这次就购买了一台内存刚好为 1GB 的 VPS，没有足够内存解压 NixOS 23.05 的镜像，因
+此无法使用 netboot.xyz 启动 NixOS 安装环境。同时由于我的主机商也不提供自定义镜像
+功能，我也无法通过光盘启动 NixOS 安装程序。
+
+- 使用 [NixOS-Infect](https://github.com/elitak/nixos-infect) 或
+  [NixOS-Anywhere](https://github.com/nix-community/nixos-anywhere) 等工具，直接
+  替换运行在 VPS 上的操作系统。
+
+NixOS-Infect 工具的原理是在本地系统上安装 Nix Daemon，再使用它构建一个完整的
+NixOS 系统，最后将原系统的启动项替换成 NixOS 的。由于这种方法不需要在内存中解压
+NixOS 的完整安装镜像，这种方法更适合小内存的 VPS。但这种方法的缺点是无法自定义分
+区结构和文件系统类型。只能使用 VPS 服务商的默认分区配置。对于使用 Btrfs/ZFS 以及
+[Impermanence](/article/modify-computer/nixos-impermanence.lantian/) 等非标准分
+区方案/文件系统的用户不友好。
+
+而 NixOS-Anywhere 的原理是通过 Linux 内核的 `kexec` 功能替换当前运行的内核，直接
+启动到内存中的 NixOS 的安装镜像，本质原理与 netboot.xyz 大致相同，因此也与
+netboot.xyz 一样需要较大的内存空间。
+
+- 先 NixOS-Infect，再在恢复环境中手动调整分区
+
+对于类似的小内存 VPS，我曾经使用的方法是，先使用 NixOS-Infect 安装一个普通的
+NixOS，然后部署一份开启了 Btrfs 和 Impermanence 的配置，然后重启到恢复环境，在恢
+复环境中调整分区、转换分区格式。这种方法能用，但是很麻烦，而且一旦中间一步操作出
+错，很难修复系统，只能从头开始。
+
+- ……还有别的方法吗？
+
+最近 NixOS 社区发布了一款工具 [Disko](https://github.com/nix-community/disko)，
+它的原本用途是在 NixOS 安装环境中自动对硬盘进行分区，从而实现用 Nix 配置文件声明
+式管理硬盘分区。但是，这款工具也提供了根据给定的分区表和 NixOS 配置，自动生成磁
+盘镜像的功能。那么，我们就可以配置好 Btrfs/ZFS/Impermanence，生成对应的磁盘镜
+像，再在 VPS 上直接用 `dd` 命令写入硬盘，就可以简单地安装 NixOS 了。
+
+由于这种方法对 VPS 上运行的恢复环境几乎没有要求（有网络和 `dd` 命令就可以），我
+们可以启动到占用内存很小的 Alpine Linux 发行版，然后通过网络传输磁盘镜像写入 VPS
+硬盘。
+
+## 准备 NixOS 配置
+
+在开始这个方法前，我们需要准备一份简单的 NixOS 配置，包含最基础的引导、网
+络、root 密码、SSH 密钥等配置，以保证你后续可以部署完整的配置。当然你也可以直接
+使用一份完整的 NixOS 配置，只不过稍后创建的磁盘镜像体积会更大。
+
+我准备的配置文件如下，存为 `configuration.nix`：
+
+```nix
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
+  # 我用的一些内核参数
+  boot.kernelParams = [
+    # 关闭内核的操作审计功能
+    "audit=0"
+    # 不要根据 PCIe 地址生成网卡名（例如 enp1s0，对 VPS 没用），而是直接根据顺序生成（例如 eth0）
+    "net.ifnames=0"
+  ];
+
+  # 我用的 Initrd 配置，开启 ZSTD 压缩和基于 systemd 的第一阶段启动
+  boot.initrd = {
+    compressor = "zstd";
+    compressorArgs = ["-19" "-T0"];
+    systemd.enable = true;
+  };
+
+  # 安装 Grub
+  boot.loader.grub = {
+    enable = !config.boot.isContainer;
+    default = "saved";
+    devices = ["/dev/vda"];
+  };
+
+  # 时区，根据你的所在地修改
+  time.timeZone = "Asia/Shanghai";
+
+  # Root 用户的密码和 SSH 密钥。如果网络配置有误，可以用此处的密码在控制台上登录进去手动调整网络配置。
+  users.mutableUsers = false;
+  users.users.root = {
+    hashedPassword = "$6$6KYCDKHRNpY7z4WE$B0UtMiPfaniXYCVW0fTXf3yFX6ptW.IxmvD2UqDNMx.H1koYBaLA2neygBPJFADvi8BLTR3xWN5IRXyao80j51";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmv9jX+DKrfZbKiZTk+LhPlIAoyFeVEraFaxKk29mvc m2"
+    ];
+  };
+
+  # 使用 systemd-networkd 管理网络
+  systemd.network.enable = true;
+  services.resolved.enable = false;
+
+  # 配置网络 IP 和 DNS
+  systemd.network.networks.eth0 = {
+    address = ["123.45.678.90/24"];
+    gateway = ["123.45.678.1"];
+    matchConfig.Name = "eth0";
+  };
+  networking.nameservers = [
+    "8.8.8.8"
+  ];
+
+  # 开启 SSH 服务端，监听 2222 端口
+  services.openssh = {
+    enable = true;
+    ports = [2222];
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = lib.mkForce "prohibit-password";
+    };
+  };
+
+  # 关闭 NixOS 自带的防火墙
+  networking.firewall.enable = false;
+
+  # 关闭 DHCP，手动配置 IP
+  networking.useDHCP = false;
+
+  # 主机名，随意设置即可
+  networking.hostName = "bootstrap";
+
+  # 首次安装系统时 NixOS 的最新版本，用于在大版本升级时避免发生向前不兼容的情况
+  system.stateVersion = "23.05";
+
+  # QEMU（KVM）虚拟机需要使用的内核模块
+  boot.initrd.postDeviceCommands = lib.mkIf (!config.boot.initrd.systemd.enable) ''
+    # Set the system time from the hardware clock to work around a
+    # bug in qemu-kvm > 1.5.2 (where the VM clock is initialised
+    # to the *boot time* of the host).
+    hwclock -s
+  '';
+
+  boot.initrd.availableKernelModules = [
+    "virtio_net"
+    "virtio_pci"
+    "virtio_mmio"
+    "virtio_blk"
+    "virtio_scsi"
+  ];
+  boot.initrd.kernelModules = [
+    "virtio_balloon"
+    "virtio_console"
+    "virtio_rng"
+  ];
+}
+```
+
+然后，准备一份 `flake.nix`，用 Flake 的方式管理 nixpkgs 的版本，并同时引入
+Impermanence 等我使用的模块：
+
+```nix
+{
+  description = "Lan Tian's NixOS Flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    impermanence.url = "github:nix-community/impermanence";
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
+    lib = nixpkgs.lib;
+  in rec {
+    nixosConfigurations.bootstrap = lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        inputs.impermanence.nixosModules.impermanence
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+
+这个系统配置现在是无法构建的，因为我们还没有配置文件系统。如果你现在用
+`nixos-rebuild build --flake .#bootstrap` 试图构建，会遇到以下错误：
+
+```bash
+error:
+Failed assertions:
+- The ‘fileSystems’ option does not specify your root file system.
+```
+
+所以接下来，我们就要加入 Disko 模块，以及分区表和文件系统的配置。
+
+## 配置镜像中的分区（开启 Impermanence）
+
+> 如果你不使用 Impermanence 等将 root 分区放在 tmpfs 上的方案，请跳到下一小节。
+
+修改 `flake.nix` 引入 Disko 模块：
+
+```nix
+{
+  description = "Lan Tian's NixOS Flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    impermanence.url = "github:nix-community/impermanence";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
+    lib = nixpkgs.lib;
+  in rec {
+    nixosConfigurations.bootstrap = lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        inputs.impermanence.nixosModules.impermanence
+
+        inputs.disko.nixosModules.disko
+
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+
+接下来，我们就要通过 Disko 模块提供的配置选项，配置磁盘镜像中的分区了。修改
+`configuration.nix`，加入以下配置：
+
+```nix
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
+  # 其余配置省略
+
+  disko = {
+    # 不要让 Disko 直接管理 NixOS 的 fileSystems.* 配置。
+    # 原因是 Disko 默认通过 GPT 分区表的分区名挂载分区，但分区名很容易被 fdisk 等工具覆盖掉。
+    # 导致一旦新配置部署失败，磁盘镜像自带的旧配置也无法正常启动。
+    enableConfig = false;
+
+    devices = {
+      # 定义一个磁盘
+      disk.main = {
+        # 要生成的磁盘镜像的大小，2GB 足够我使用，可以按需调整
+        imageSize = "2G";
+        # 磁盘路径。Disko 生成磁盘镜像时，实际上是启动一个 QEMU 虚拟机走一遍安装流程。
+        # 因此无论你的 VPS 上的硬盘识别成 sda 还是 vda，这里都以 Disko 的虚拟机为准，指定 vda。
+        device = "/dev/vda";
+        type = "disk";
+        # 定义这块磁盘上的分区表
+        content = {
+          # 使用 GPT 类型分区表。Disko 对 MBR 格式分区的支持似乎有点问题。
+          type = "gpt";
+          # 分区列表
+          partitions = {
+            # GPT 分区表不存在 MBR 格式分区表预留给 MBR 主启动记录的空间，因此这里需要预留
+            # 硬盘开头的 1MB 空间给 MBR 主启动记录，以便后续 Grub 启动器安装到这块空间。
+            boot = {
+              size = "1M";
+              type = "EF02"; # for grub MBR
+              # 优先级设置为最高，保证这块空间在硬盘开头
+              priority = 0;
+            };
+
+            # ESP 分区，或者说是 boot 分区。这套配置理论上同时支持 EFI 模式和 BIOS 模式启动的 VPS。
+            ESP = {
+              name = "ESP";
+              # 根据我个人的需求预留 512MB 空间。如果你的 boot 分区占用更大/更小，可以按需调整。
+              size = "512M";
+              type = "EF00";
+              # 优先级设置成第二高，保证在剩余空间的前面
+              priority = 1;
+              # 格式化成 FAT32 格式
+              content = {
+                type = "filesystem";
+                format = "vfat";
+                # 用作 Boot 分区，Disko 生成磁盘镜像时根据此处配置挂载分区，需要和 fileSystems.* 一致
+                mountpoint = "/boot";
+                mountOptions = ["fmask=0077" "dmask=0077"];
+              };
+            };
+
+            # 存放 NixOS 系统的分区，使用剩下的所有空间。
+            nix = {
+              size = "100%";
+              # 格式化成 Btrfs，可以按需修改
+              content = {
+                type = "filesystem";
+                format = "btrfs";
+                # 用作 Nix 分区，Disko 生成磁盘镜像时根据此处配置挂载分区，需要和 fileSystems.* 一致
+                mountpoint = "/nix";
+                mountOptions = ["compress-force=zstd" "nosuid" "nodev"];
+              };
+            };
+          };
+        };
+      };
+
+      # 由于我开了 Impermanence，需要声明一下根分区是 tmpfs，以便 Disko 生成磁盘镜像时挂载分区
+      nodev."/" = {
+        fsType = "tmpfs";
+        mountOptions = ["relatime" "mode=755" "nosuid" "nodev"];
+      };
+    };
+  };
+
+  # 由于我们没有让 Disko 管理 fileSystems.* 配置，我们需要手动配置
+  # 根分区，由于我开了 Impermanence，所以这里是 tmpfs
+  fileSystems."/" = {
+    device = "tmpfs";
+    fsType = "tmpfs";
+    options = ["relatime" "mode=755" "nosuid" "nodev"];
+  };
+
+  # /nix 分区，是磁盘镜像上的第三个分区。由于我的 VPS 将硬盘识别为 sda，因此这里用 sda3。如果你的 VPS 识别结果不同请按需修改
+  fileSystems."/nix" = {
+    device = "/dev/sda3";
+    fsType = "btrfs";
+    options = ["compress-force=zstd" "nosuid" "nodev"];
+  };
+
+  # /boot 分区，是磁盘镜像上的第二个分区。由于我的 VPS 将硬盘识别为 sda，因此这里用 sda2。如果你的 VPS 识别结果不同请按需修改
+  fileSystems."/boot" = {
+    device = "/dev/sda2";
+    fsType = "vfat";
+    options = ["fmask=0077" "dmask=0077"];
+  };
+}
+```
+
+## 配置镜像中的分区（普通安装）
+
+> 如果你使用 Impermanence 等将 root 分区放在 tmpfs 上的方案，请参照上一小节并跳
+> 过这一小节。
+
+与上一小节一样，修改 `flake.nix` 引入 Disko 模块：
+
+```nix
+{
+  description = "Lan Tian's NixOS Flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    impermanence.url = "github:nix-community/impermanence";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
+    lib = nixpkgs.lib;
+  in rec {
+    nixosConfigurations.bootstrap = lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        inputs.impermanence.nixosModules.impermanence
+
+        inputs.disko.nixosModules.disko
+
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+
+接下来，我们就要通过 Disko 模块提供的配置选项，配置磁盘镜像中的分区了。修改
+`configuration.nix`，加入以下配置：
+
+```nix
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
+  # 其余配置省略
+
+  disko = {
+    # 不要让 Disko 直接管理 NixOS 的 fileSystems.* 配置。
+    # 原因是 Disko 默认通过 GPT 分区表的分区名挂载分区，但分区名很容易被 fdisk 等工具覆盖掉。
+    # 导致一旦新配置部署失败，磁盘镜像自带的旧配置也无法正常启动。
+    enableConfig = false;
+
+    devices = {
+      # 定义一个磁盘
+      disk.main = {
+        # 要生成的磁盘镜像的大小，2GB 足够我使用，可以按需调整
+        imageSize = "2G";
+        # 磁盘路径。Disko 生成磁盘镜像时，实际上是启动一个 QEMU 虚拟机走一遍安装流程。
+        # 因此无论你的 VPS 上的硬盘识别成 sda 还是 vda，这里都以 Disko 的虚拟机为准，指定 vda。
+        device = "/dev/vda";
+        type = "disk";
+        # 定义这块磁盘上的分区表
+        content = {
+          # 使用 GPT 类型分区表。Disko 对 MBR 格式分区的支持似乎有点问题。
+          type = "gpt";
+          # 分区列表
+          partitions = {
+            # GPT 分区表不存在 MBR 格式分区表预留给 MBR 主启动记录的空间，因此这里需要预留
+            # 硬盘开头的 1MB 空间给 MBR 主启动记录，以便后续 Grub 启动器安装到这块空间。
+            boot = {
+              size = "1M";
+              type = "EF02"; # for grub MBR
+              # 优先级设置为最高，保证这块空间在硬盘开头
+              priority = 0;
+            };
+
+            # ESP 分区，或者说是 boot 分区。这套配置理论上同时支持 EFI 模式和 BIOS 模式启动的 VPS。
+            ESP = {
+              name = "ESP";
+              # 根据我个人的需求预留 512MB 空间。如果你的 boot 分区占用更大/更小，可以按需调整。
+              size = "512M";
+              type = "EF00";
+              # 优先级设置成第二高，保证在剩余空间的前面
+              priority = 1;
+              # 格式化成 FAT32 格式
+              content = {
+                type = "filesystem";
+                format = "vfat";
+                # 用作 Boot 分区，Disko 生成磁盘镜像时根据此处配置挂载分区，需要和 fileSystems.* 一致
+                mountpoint = "/boot";
+                mountOptions = ["fmask=0077" "dmask=0077"];
+              };
+            };
+
+            # 存放 NixOS 系统的分区，使用剩下的所有空间。
+            nix = {
+              size = "100%";
+              # 格式化成 Btrfs，可以按需修改
+              content = {
+                type = "filesystem";
+                format = "btrfs";
+                # 用作根分区，Disko 生成磁盘镜像时根据此处配置挂载分区，需要和 fileSystems.* 一致
+                mountpoint = "/";
+                mountOptions = ["compress-force=zstd" "nosuid" "nodev"];
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+
+  # 由于我们没有让 Disko 管理 fileSystems.* 配置，我们需要手动配置
+  # 根分区，是磁盘镜像上的第三个分区。由于我的 VPS 将硬盘识别为 sda，因此这里用 sda3。如果你的 VPS 识别结果不同请按需修改
+  fileSystems."/" = {
+    device = "/dev/sda3";
+    fsType = "btrfs";
+    options = ["compress-force=zstd" "nosuid" "nodev"];
+  };
+
+  # /boot 分区，是磁盘镜像上的第二个分区。由于我的 VPS 将硬盘识别为 sda，因此这里用 sda3。如果你的 VPS 识别结果不同请按需修改
+  fileSystems."/boot" = {
+    device = "/dev/sda2";
+    fsType = "vfat";
+    options = ["fmask=0077" "dmask=0077"];
+  };
+}
+```
+
+## 生成磁盘镜像
+
+修改 `flake.nix` 添加一个“软件包”，调用 Disko 的生成磁盘镜像功能：
+
+```nix
+{
+  description = "Lan Tian's NixOS Flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    impermanence.url = "github:nix-community/impermanence";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
+    lib = nixpkgs.lib;
+  in rec {
+    nixosConfigurations.bootstrap = lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        inputs.impermanence.nixosModules.impermanence
+        inputs.disko.nixosModules.disko
+        ./configuration.nix
+      ];
+    };
+
+    packages.x86_64-linux = {
+      image = self.nixosConfigurations.bootstrap.config.system.build.diskoImages;
+    };
+  };
+}
+```
+
+最后运行 `nix build .#image`。稍等片刻，磁盘镜像就会生成在 `result/main.raw` 路
+径下。
+
+## 将磁盘镜像上传到 VPS
+
+在 VPS 上启动救援系统，或者 Alpine Linux 等轻量化系统。
+
+如果你的救援系统有 SSH 服务端，可以使用下列命令上传镜像：
+
+```bash
+# 根据 VPS 上的硬盘识别结果，修改 sda/vda
+cat result/main.raw | ssh root@123.45.678.90 "dd of=/dev/sda"
+```
+
+如果你的救援系统没有 SSH，可以使用下列命令： **（注意：没有加密！）**
+
+```bash
+# 根据 VPS 上的硬盘识别结果，修改 sda/vda
+# 在 VPS 上运行
+nc -l 1234 | dd of=/dev/sda
+# 在本地运行
+cat result/main.raw | nc 123.45.678.89 1234
+```
+
+等待命令执行结束，然后重启 VPS。此时你应该就进入了已经安装好的 NixOS 系统了。
+
+## 扩展分区大小
+
+由于我们创建的磁盘镜像大小只有 2GB，`dd` 完成后的镜像不会占满 VPS 的硬盘空间，需
+要手动扩展分区。
+
+运行 `fdisk /dev/sda`，删除第三个 `/nix`（或者 `/`）分区，然后重新创建，保证分区
+起始位置不变，分区结束位置扩展到硬盘结尾。如果看到擦除文件系统头部信息的提示，不
+要擦除！
+
+最后运行文件系统对应的命令扩展文件系统的大小。ext4 分区可以使用
+`resize2fs /dev/sda3`。Btrfs 分区可以使用 `btrfs filesystem resize max /nix`（或
+者 `/`）。

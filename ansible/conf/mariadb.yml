@@ -1,0 +1,26 @@
+- name: 配置 mariadb / Config mariadb
+  gather_facts: no
+  hosts: mariadb
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: 同步安装脚本 / Sync setup script
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../mariadb"
+        dest: /opt/ops/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--mkpath"
+          - "--chown=root:root"
+
+    - name: 同步 mariadb 配置 / Synchronize mariadb config
+      ansible.builtin.synchronize:
+        src: "{{ playbook_dir }}/../../conf/mariadb/{{ inventory_hostname }}/"
+        dest: /etc/ops/mariadb/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--mkpath"
+          - "--chown=root:root"
