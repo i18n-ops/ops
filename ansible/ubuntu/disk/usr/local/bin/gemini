@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+mise x -- gemini-next && . ~/.config/gemini-cli/project.env && exec mise x -- gemini --yolo $@
