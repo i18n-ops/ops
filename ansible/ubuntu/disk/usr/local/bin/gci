@@ -11,7 +11,7 @@ branch=$(git symbolic-ref --short -q HEAD)
 set -ex
 
 git add --update :/ && git commit -m "$msg" || true
-git push || git pull origin $branch && git push || true
+git push 2>/dev/null || (git pull origin $branch && git push) || true
 
 git show-ref --verify --quiet refs/heads/main || (git branch main && git branch --set-upstream-to=origin/main main && git pull && git checkout $branch)
 
