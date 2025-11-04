@@ -5,7 +5,7 @@ path = ~/.config/git/_.conf
 
 [core]
 quotepath = false
-editor = vim
+editor = vi
 precomposeUnicode = true
 excludesfile=~/.gitignore
 attributesfile = ~/.gitattributes

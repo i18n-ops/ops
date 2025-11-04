@@ -14,4 +14,3 @@ export PATH="$PNPM_HOME:$PATH"
 set -o allexport
 . /etc/run_dir.sh /etc/profile.d
 set +o allexport
-
