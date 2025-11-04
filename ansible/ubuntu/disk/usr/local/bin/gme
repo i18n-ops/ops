@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-. ~/.bash_aliases
 branch=$(git symbolic-ref --short -q HEAD)
 
 root=$(git rev-parse --show-toplevel)
